@@ -1,0 +1,16 @@
+[package]
+name = "cross-encode-rs"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+dirs = { version = "7.0.0", optional = true }
+hf-hub = { version = "1.0.0", optional = true }
+ndarray = "0.17.2"
+ort = "2.0.0-rc.13"
+tokenizers = "0.23.2"
+tokio = { workspace = true }
+
+[features]
+default = ["hf-hub"]
+hf-hub = ["dep:hf-hub", "dep:dirs"]
