@@ -94,7 +94,6 @@ jobs:
       - clippy
       - format
       - test
-      - test-windows
     permissions:
       contents: write # to be able to publish a GitHub release
     steps:
