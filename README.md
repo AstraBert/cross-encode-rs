@@ -2,6 +2,10 @@
 
 Fast ONNX cross-encoder inference with [`ort`](https://ort.pyke.io/).
 
+> [!NOTE]
+>
+> Currently the crate only works on Linux and MacOS.
+
 ## Layout
 
 - `crates/cross-encode-rs` — library. `CrossEncoder::rerank(query, documents, with_documents)` scores documents against a query. Supports single-label (sigmoid) and two-label (softmax) heads. Optional `hf-hub` feature to pull models from Hugging Face.
