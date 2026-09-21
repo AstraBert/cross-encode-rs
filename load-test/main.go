@@ -4,9 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
+	"sort"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -34,17 +36,62 @@ type RerankRequest struct {
 	ReturnDocuments bool     `json:"return_documents"`
 }
 
-func sendPostRequest(endpoint string, client *http.Client, successTime *atomic.Int64, failed *atomic.Int32, success *atomic.Int32) {
+// FailureCounts aggregates why requests failed, since printing one line per
+// failure would flood stdout at high concurrency. Reasons are bucketed by a
+// short label (e.g. "http 503" or the connection error string) so patterns
+// are still visible in the final summary.
+type FailureCounts struct {
+	mu     sync.Mutex
+	counts map[string]int
+}
+
+func newFailureCounts() *FailureCounts {
+	return &FailureCounts{counts: make(map[string]int)}
+}
+
+func (f *FailureCounts) record(reason string) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.counts[reason]++
+}
+
+func (f *FailureCounts) print() {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+
+	if len(f.counts) == 0 {
+		return
+	}
+
+	type kv struct {
+		reason string
+		count  int
+	}
+	sorted := make([]kv, 0, len(f.counts))
+	for reason, count := range f.counts {
+		sorted = append(sorted, kv{reason, count})
+	}
+	sort.Slice(sorted, func(i, j int) bool { return sorted[i].count > sorted[j].count })
+
+	fmt.Println("Failure reasons:")
+	for _, entry := range sorted {
+		fmt.Printf("  %5d  %s\n", entry.count, entry.reason)
+	}
+}
+
+func sendPostRequest(endpoint string, client *http.Client, successTime *atomic.Int64, failed *atomic.Int32, success *atomic.Int32, failures *FailureCounts) {
 
 	requestJSON := RerankRequest{Query: QUERY, Documents: DOCUMENTS[:], ReturnDocuments: true}
 	requestBody, err := json.Marshal(requestJSON)
 	if err != nil {
+		failures.record(fmt.Sprintf("request marshal error: %s", err.Error()))
 		failed.Add(1)
 		return
 	}
 
 	request, err := http.NewRequest("POST", endpoint, bytes.NewReader(requestBody))
 	if err != nil {
+		failures.record(fmt.Sprintf("request build error: %s", err.Error()))
 		failed.Add(1)
 		return
 	}
@@ -53,6 +100,10 @@ func sendPostRequest(endpoint string, client *http.Client, successTime *atomic.I
 	start := time.Now()
 	response, err := client.Do(request)
 	if err != nil {
+		// Connection-level failure (refused, reset, timeout, too many open
+		// files, ...) — this never reached the server, so it won't show up
+		// in the server's logs either.
+		failures.record(fmt.Sprintf("connection error: %s", err.Error()))
 		failed.Add(1)
 		return
 	}
@@ -66,6 +117,12 @@ func sendPostRequest(endpoint string, client *http.Client, successTime *atomic.I
 		return
 	}
 
+	body, readErr := io.ReadAll(response.Body)
+	if readErr != nil {
+		failures.record(fmt.Sprintf("http %d (body unreadable: %s)", response.StatusCode, readErr.Error()))
+	} else {
+		failures.record(fmt.Sprintf("http %d: %s", response.StatusCode, string(body)))
+	}
 	failed.Add(1)
 }
 
@@ -99,6 +156,7 @@ func main() {
 	var successTime atomic.Int64
 	var failed atomic.Int32
 	var success atomic.Int32
+	failures := newFailureCounts()
 
 	startTime := time.Now()
 
@@ -109,7 +167,7 @@ func main() {
 		go func() {
 			defer wg.Done()
 			defer func() { <-semaphore }() // Release semaphore
-			sendPostRequest(args[2], client, &successTime, &failed, &success)
+			sendPostRequest(args[2], client, &successTime, &failed, &success, failures)
 		}()
 	}
 
@@ -132,4 +190,5 @@ func main() {
 	fmt.Printf("Average response time: %.2f ms\n", avgTime)
 	fmt.Printf("Total test duration: %v\n", totalDuration)
 	fmt.Printf("Requests per second: %.2f\n", float64(howMany)/totalDuration.Seconds())
+	failures.print()
 }
