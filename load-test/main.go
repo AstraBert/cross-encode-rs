@@ -34,7 +34,7 @@ type RerankRequest struct {
 	ReturnDocuments bool     `json:"return_documents"`
 }
 
-func sendPostRequest(client *http.Client, successTime *atomic.Int64, failed *atomic.Int32, success *atomic.Int32) {
+func sendPostRequest(endpoint string, client *http.Client, successTime *atomic.Int64, failed *atomic.Int32, success *atomic.Int32) {
 
 	requestJSON := RerankRequest{Query: QUERY, Documents: DOCUMENTS[:], ReturnDocuments: true}
 	requestBody, err := json.Marshal(requestJSON)
@@ -43,7 +43,7 @@ func sendPostRequest(client *http.Client, successTime *atomic.Int64, failed *ato
 		return
 	}
 
-	request, err := http.NewRequest("POST", "https://clelias-macbook-pro.olm-gecko.ts.net/cross-encoder/rerank", bytes.NewReader(requestBody))
+	request, err := http.NewRequest("POST", endpoint, bytes.NewReader(requestBody))
 	if err != nil {
 		failed.Add(1)
 		return
@@ -71,8 +71,8 @@ func sendPostRequest(client *http.Client, successTime *atomic.Int64, failed *ato
 
 func main() {
 	args := os.Args
-	if len(args) != 2 {
-		log.Fatalf("Expecting exactly one argument from command line")
+	if len(args) != 3 {
+		log.Fatalf("Expecting exactly two arguments from command line")
 	}
 
 	howMany, err := strconv.Atoi(args[1])
@@ -109,7 +109,7 @@ func main() {
 		go func() {
 			defer wg.Done()
 			defer func() { <-semaphore }() // Release semaphore
-			sendPostRequest(client, &successTime, &failed, &success)
+			sendPostRequest(args[2], client, &successTime, &failed, &success)
 		}()
 	}
 
