@@ -6,6 +6,12 @@ description = "Fast cross-encoder ONNX inference with ort"
 keywords = ["onnx", "cross-encoder", "reranking"]
 license = "MIT"
 readme = "README.md"
+include = [
+    "src/**/*",
+    "Cargo.toml",
+    "README.md",
+    "LICENSE",
+]
 
 [dependencies]
 dirs = { version = "7.0.0", optional = true }
