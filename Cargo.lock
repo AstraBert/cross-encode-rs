@@ -417,8 +417,9 @@ dependencies = [
  "hf-hub",
  "ndarray",
  "ort",
+ "serde",
+ "serde_json",
  "tokenizers",
- "tokio",
 ]
 
 [[package]]

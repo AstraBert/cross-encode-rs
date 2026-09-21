@@ -5,7 +5,7 @@
 
 use std::path::PathBuf;
 
-use tokenizers::{Encoding, Tokenizer};
+use tokenizers::{Encoding, PaddingParams, PaddingStrategy, Tokenizer};
 
 use crate::errors::CrossEncoderError;
 
@@ -18,7 +18,13 @@ use crate::errors::CrossEncoderError;
 pub fn load_tokenizer(path: impl Into<PathBuf>) -> Result<Tokenizer, CrossEncoderError> {
     let p = path.into();
 
-    let tokenizer = Tokenizer::from_file(&p)?;
+    let mut tokenizer = Tokenizer::from_file(&p)?;
+    // `run_inference` stacks encodings into a single [batch, seq_len] tensor, so every
+    // encoding in a batch must share the same length regardless of the tokenizer.json config.
+    tokenizer.with_padding(Some(PaddingParams {
+        strategy: PaddingStrategy::BatchLongest,
+        ..Default::default()
+    }));
 
     Ok(tokenizer)
 }
