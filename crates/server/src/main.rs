@@ -52,6 +52,9 @@ struct Args {
     /// of each worker to allocate. When running
     /// several workers, keep this low to avoid
     /// oversubscribing the available cores.
+    /// Might not have any effect on the amount
+    /// of threads actually used at inference time and,
+    /// in that case, use OMP_NUM_THREADS env variable.
     #[arg(long, default_value = None)]
     threads: Option<usize>,
     /// Address to bind the server to,

@@ -4,7 +4,7 @@
 # dependencies = [
 #   "fastapi>=0.115",
 #   "uvicorn>=0.30",
-#   "sentence-transformers>=6.1.0,<7",
+#   "sentence-transformers[onnx]>=5,<6",
 # ]
 # ///
 """FastAPI equivalent of crates/server, for comparing inference time against
@@ -30,7 +30,7 @@ parser.add_argument("--bind", default="0.0.0.0", help="Address to bind the serve
 parser.add_argument("--port", type=int, default=7433, help="Port to bind the server to")
 args = parser.parse_args()
 
-model = CrossEncoder(args.model, num_labels=1)
+model = CrossEncoder(args.model, num_labels=1, backend="onnx")
 
 app = FastAPI()
 
