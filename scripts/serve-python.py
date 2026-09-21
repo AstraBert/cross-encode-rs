@@ -8,15 +8,10 @@
 # ]
 # ///
 """FastAPI equivalent of crates/server, for comparing inference time against
-the Rust/ONNX server. Exposes the same `/rerank` request/response shape and
-serializes inference through a single worker thread, mirroring the Rust
-server's single-threaded `CrossEncoder` worker (see spawn_inference_worker in
-crates/server/src/main.rs) rather than letting FastAPI's default threadpool
-run several inferences concurrently under the GIL.
+the Rust/ONNX server. Exposes the same `/rerank` request/response shape.
 """
 
 import argparse
-import threading
 import time
 
 import torch
@@ -36,7 +31,6 @@ parser.add_argument("--port", type=int, default=7433, help="Port to bind the ser
 args = parser.parse_args()
 
 model = CrossEncoder(args.model, num_labels=1)
-inference_lock = threading.Lock()
 
 app = FastAPI()
 
@@ -61,14 +55,10 @@ class RerankResponse(BaseModel):
 def rerank(request: RerankRequest) -> RerankResponse:
     start = time.monotonic()
 
-    # Serialize inference to mirror the Rust server's single background
-    # worker thread, so throughput comparisons aren't skewed by Python-side
-    # concurrency the Rust server doesn't have.
-    with inference_lock:
-        scores = model.predict(
-            [(request.query, doc) for doc in request.documents],
-            activation_fn=torch.nn.Sigmoid(),
-        )
+    scores = model.predict(
+        [(request.query, doc) for doc in request.documents],
+        activation_fn=torch.nn.Sigmoid(),
+    )
 
     items = [
         RerankResponseItem(

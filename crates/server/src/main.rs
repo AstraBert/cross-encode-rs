@@ -1,4 +1,10 @@
-use std::path::PathBuf;
+use std::{
+    path::PathBuf,
+    sync::{
+        Arc,
+        atomic::{AtomicUsize, Ordering},
+    },
+};
 
 use axum::{
     Router, extract::State, http::StatusCode, response::IntoResponse, response::Json, routing::post,
@@ -10,6 +16,16 @@ use tokio::{
     sync::{mpsc, oneshot},
     time::Instant,
 };
+
+/// `ort::Session::run` requires `&mut self`, so a single session can't serve
+/// requests from multiple threads concurrently. Instead, default to one
+/// worker (each with its own model + tokenizer) per available core, and
+/// load-balance requests across them.
+fn default_workers() -> usize {
+    std::thread::available_parallelism()
+        .map(|n| n.get())
+        .unwrap_or(1)
+}
 
 #[derive(Debug, Parser)]
 /// Serve a
@@ -28,8 +44,14 @@ struct Args {
     /// channel buffer
     #[arg(long, short, default_value_t = 100)]
     buffer_size: usize,
-    /// Threads for the worker
-    /// to allocate
+    /// Number of parallel inference workers to spawn, each with its own
+    /// model + tokenizer instance. Defaults to the number of available cores.
+    #[arg(long, short, default_value_t = default_workers())]
+    workers: usize,
+    /// Intra-op threads for the ONNX session
+    /// of each worker to allocate. When running
+    /// several workers, keep this low to avoid
+    /// oversubscribing the available cores.
     #[arg(long, default_value = None)]
     threads: Option<usize>,
     /// Address to bind the server to,
@@ -86,7 +108,16 @@ struct RerankResponseItem {
 
 #[derive(Debug, Clone)]
 struct AppState {
-    tx: mpsc::Sender<WorkerRequest>,
+    workers: Arc<Vec<mpsc::Sender<WorkerRequest>>>,
+    next_worker: Arc<AtomicUsize>,
+}
+
+impl AppState {
+    /// Picks the next worker's channel in round-robin order.
+    fn next_worker(&self) -> &mpsc::Sender<WorkerRequest> {
+        let idx = self.next_worker.fetch_add(1, Ordering::Relaxed) % self.workers.len();
+        &self.workers[idx]
+    }
 }
 
 impl<'a> From<RerankResult<'a>> for RerankResponseItem {
@@ -150,6 +181,25 @@ fn spawn_inference_worker(
     tx
 }
 
+fn spawn_inference_workers(
+    model_path: PathBuf,
+    tokenizer_path: PathBuf,
+    buffer_size: usize,
+    intra_threads: Option<usize>,
+    num_workers: usize,
+) -> Vec<mpsc::Sender<WorkerRequest>> {
+    (0..num_workers.max(1))
+        .map(|_| {
+            spawn_inference_worker(
+                model_path.clone(),
+                tokenizer_path.clone(),
+                buffer_size,
+                intra_threads,
+            )
+        })
+        .collect()
+}
+
 #[tracing::instrument]
 async fn rerank(
     State(state): State<AppState>,
@@ -164,7 +214,7 @@ async fn rerank(
 
     let start = Instant::now();
 
-    if state.tx.send(worker_req).await.is_err() {
+    if state.next_worker().send(worker_req).await.is_err() {
         tracing::error!("Could not reach the worker channel");
         return Err(RerankAPIError::WorkerUnavailableError);
     }
@@ -203,13 +253,20 @@ async fn main() {
 
     tracing_subscriber::fmt().json().init();
 
-    let tx = spawn_inference_worker(
+    let workers = spawn_inference_workers(
         PathBuf::from(args.model),
         PathBuf::from(args.tokenizer),
         args.buffer_size,
         args.threads,
+        args.workers,
     );
-    let state = AppState { tx };
+    let msg = format!("Spawned {} inference worker(s)", workers.len());
+    tracing::info!(msg);
+
+    let state = AppState {
+        workers: Arc::new(workers),
+        next_worker: Arc::new(AtomicUsize::new(0)),
+    };
 
     let app = Router::new()
         .route("/rerank", post(rerank))
