@@ -79,7 +79,11 @@ mod tests {
     #[test]
     fn run_inference_returns_one_score_per_document() {
         let tokenizer = load_tokenizer("testfiles/tokenizer.json").expect("tokenizer should load");
-        let documents = ["rust is a language", "paris is in france", "another document"];
+        let documents = [
+            "rust is a language",
+            "paris is in france",
+            "another document",
+        ];
         let encodings =
             encode_batch(&tokenizer, "what is rust", &documents).expect("encoding should succeed");
         let mut session = test_session();
@@ -96,7 +100,10 @@ mod tests {
     #[test]
     fn run_inference_ranks_relevant_document_higher() {
         let tokenizer = load_tokenizer("testfiles/tokenizer.json").expect("tokenizer should load");
-        let documents = ["rust is a systems programming language", "paris is in france"];
+        let documents = [
+            "rust is a systems programming language",
+            "paris is in france",
+        ];
         let encodings =
             encode_batch(&tokenizer, "what is rust", &documents).expect("encoding should succeed");
         let mut session = test_session();

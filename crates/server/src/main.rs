@@ -64,6 +64,7 @@ struct Args {
 }
 
 #[derive(Debug, Clone)]
+#[allow(clippy::enum_variant_names)]
 enum RerankAPIError {
     ChannelError(String),
     InferenceError(String),
@@ -171,7 +172,7 @@ fn spawn_inference_worker(
                     let items = results
                         .iter()
                         .copied()
-                        .map(|s| RerankResponseItem::from(s))
+                        .map(RerankResponseItem::from)
                         .collect::<Vec<RerankResponseItem>>();
                     (Some(RerankResponse { items }), None)
                 }
@@ -279,7 +280,7 @@ async fn main() {
 
     let listener = tokio::net::TcpListener::bind(&bind_address).await.unwrap();
 
-    let msg = format!("Server running on {}", &bind_address);
+    let msg = format!("Server running on {}", bind_address);
     tracing::info!(msg);
 
     axum::serve(listener, app).await.unwrap();

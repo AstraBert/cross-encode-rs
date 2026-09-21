@@ -134,7 +134,10 @@ mod tests {
     #[test]
     fn rerank_orders_relevant_document_first() {
         let mut ce = test_encoder();
-        let documents = ["rust is a systems programming language", "paris is in france"];
+        let documents = [
+            "rust is a systems programming language",
+            "paris is in france",
+        ];
         let results = ce
             .rerank("what is rust", &documents, true)
             .expect("rerank should succeed");
@@ -146,7 +149,10 @@ mod tests {
     #[test]
     fn rerank_without_documents_omits_document_field() {
         let mut ce = test_encoder();
-        let documents = ["rust is a systems programming language", "paris is in france"];
+        let documents = [
+            "rust is a systems programming language",
+            "paris is in france",
+        ];
         let results = ce
             .rerank("what is rust", &documents, false)
             .expect("rerank should succeed");
@@ -157,7 +163,10 @@ mod tests {
     #[test]
     fn rerank_with_documents_returns_matching_document() {
         let mut ce = test_encoder();
-        let documents = ["rust is a systems programming language", "paris is in france"];
+        let documents = [
+            "rust is a systems programming language",
+            "paris is in france",
+        ];
         let results = ce
             .rerank("what is rust", &documents, true)
             .expect("rerank should succeed");

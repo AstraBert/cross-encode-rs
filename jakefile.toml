@@ -1,0 +1,6 @@
+build="cargo build --release -p server"
+test="cargo test --release -p cross-encode-rs"
+clippy = "cargo clippy --all-features"
+clippy-fix = "cargo clippy --all-features --fix --allow-dirty"
+format = "cargo fmt --all -- --check"
+format-fix = "cargo fmt --all"
