@@ -24,9 +24,17 @@ struct Args {
     /// cross-encoder model
     #[arg(long, short)]
     tokenizer: String,
+    /// Size of the worker
+    /// channel buffer
+    #[arg(long, short, default_value_t = 100)]
+    buffer_size: usize,
+    /// Threads for the worker
+    /// to allocate
+    #[arg(long, default_value = None)]
+    threads: Option<usize>,
     /// Address to bind the server to,
     /// defaults to 0.0.0.0:7432
-    #[arg(long, short, default_value = None)]
+    #[arg(long, default_value = None)]
     bind: Option<String>,
 }
 
@@ -104,11 +112,13 @@ struct WorkerRequest {
 fn spawn_inference_worker(
     model_path: PathBuf,
     tokenizer_path: PathBuf,
+    buffer_size: usize,
+    intra_threads: Option<usize>,
 ) -> mpsc::Sender<WorkerRequest> {
-    let (tx, mut rx) = mpsc::channel::<WorkerRequest>(10000);
+    let (tx, mut rx) = mpsc::channel::<WorkerRequest>(buffer_size);
 
     std::thread::spawn(move || {
-        let mut model = CrossEncoder::new(tokenizer_path, model_path, None);
+        let mut model = CrossEncoder::new(tokenizer_path, model_path, intra_threads);
 
         // blocking_recv because this is a plain OS thread, not an async task
         while let Some(req) = rx.blocking_recv() {
@@ -193,7 +203,12 @@ async fn main() {
 
     tracing_subscriber::fmt().pretty().init();
 
-    let tx = spawn_inference_worker(PathBuf::from(args.model), PathBuf::from(args.tokenizer));
+    let tx = spawn_inference_worker(
+        PathBuf::from(args.model),
+        PathBuf::from(args.tokenizer),
+        args.buffer_size,
+        args.threads,
+    );
     let state = AppState { tx };
 
     let app = Router::new()

@@ -33,4 +33,6 @@ COPY --from=builder /workspace/tokenizer.json ./tokenizer.json
 
 EXPOSE 7432
 
-CMD ["cross-encoder-server", "--model", "model.onnx", "--tokenizer", "tokenizer.json"]
+ENV OMP_NUM_THREADS=10
+
+CMD ["cross-encoder-server", "--model", "model.onnx", "--tokenizer", "tokenizer.json", "--threads", "10"]
