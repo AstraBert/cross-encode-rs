@@ -201,7 +201,7 @@ async fn rerank(
 async fn main() {
     let args = Args::parse();
 
-    tracing_subscriber::fmt().pretty().init();
+    tracing_subscriber::fmt().json().init();
 
     let tx = spawn_inference_worker(
         PathBuf::from(args.model),
