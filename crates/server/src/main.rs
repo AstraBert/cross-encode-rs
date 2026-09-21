@@ -1,0 +1,211 @@
+use std::path::PathBuf;
+
+use axum::{
+    Router, extract::State, http::StatusCode, response::IntoResponse, response::Json, routing::post,
+};
+use clap::Parser;
+use cross_encode_rs::{CrossEncoder, RerankResult};
+use serde::{Deserialize, Serialize};
+use tokio::{
+    sync::{mpsc, oneshot},
+    time::Instant,
+};
+
+#[derive(Debug, Parser)]
+/// Serve a
+/// cross-encoder model
+struct Args {
+    /// Path to the cross-encoder
+    /// model to serve (as ONNX file)
+    #[arg(long, short)]
+    model: String,
+    /// Path to the tokenizer
+    /// to use along with the
+    /// cross-encoder model
+    #[arg(long, short)]
+    tokenizer: String,
+    /// Address to bind the server to,
+    /// defaults to 0.0.0.0:7432
+    #[arg(long, short, default_value = None)]
+    bind: Option<String>,
+}
+
+#[derive(Debug, Clone)]
+enum RerankAPIError {
+    ChannelError(String),
+    InferenceError(String),
+    WorkerUnavailableError,
+}
+
+impl IntoResponse for RerankAPIError {
+    fn into_response(self) -> axum::response::Response {
+        let (status, message) = match self {
+            Self::ChannelError(msg) => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!(
+                    "Error while trying to get a response from the worker: {}",
+                    msg
+                ),
+            ),
+            Self::InferenceError(msg) => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Error while running inference: {}", msg),
+            ),
+            Self::WorkerUnavailableError => (
+                StatusCode::SERVICE_UNAVAILABLE,
+                "The inference worker is unavailable".to_string(),
+            ),
+        };
+
+        (status, message).into_response()
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct RerankRequest {
+    query: String,
+    documents: Vec<String>,
+    #[serde(default)]
+    return_documents: bool,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct RerankResponseItem {
+    index: usize,
+    score: f32,
+    document: Option<String>,
+}
+
+#[derive(Debug, Clone)]
+struct AppState {
+    tx: mpsc::Sender<WorkerRequest>,
+}
+
+impl<'a> From<RerankResult<'a>> for RerankResponseItem {
+    fn from(value: RerankResult) -> Self {
+        Self {
+            index: value.index,
+            score: value.score,
+            document: value.document.map(|d| d.to_string()),
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct RerankResponse {
+    items: Vec<RerankResponseItem>,
+}
+
+struct WorkerRequest {
+    input: RerankRequest,
+    reply: oneshot::Sender<(Option<RerankResponse>, Option<String>)>,
+}
+
+fn spawn_inference_worker(
+    model_path: PathBuf,
+    tokenizer_path: PathBuf,
+) -> mpsc::Sender<WorkerRequest> {
+    let (tx, mut rx) = mpsc::channel::<WorkerRequest>(10000);
+
+    std::thread::spawn(move || {
+        let mut model = CrossEncoder::new(tokenizer_path, model_path, None);
+
+        // blocking_recv because this is a plain OS thread, not an async task
+        while let Some(req) = rx.blocking_recv() {
+            let result = model.rerank(
+                &req.input.query,
+                req.input
+                    .documents
+                    .iter()
+                    .map(|s| s.as_str())
+                    .collect::<Vec<&str>>()
+                    .as_slice(),
+                req.input.return_documents,
+            );
+            let response = match result {
+                Ok(results) => {
+                    let items = results
+                        .iter()
+                        .copied()
+                        .map(|s| RerankResponseItem::from(s))
+                        .collect::<Vec<RerankResponseItem>>();
+                    (Some(RerankResponse { items }), None)
+                }
+                Err(e) => (None, Some(e.to_string())),
+            };
+            let _ = req.reply.send(response);
+        }
+    });
+
+    tx
+}
+
+#[tracing::instrument]
+async fn rerank(
+    State(state): State<AppState>,
+    Json(request): Json<RerankRequest>,
+) -> Result<Json<RerankResponse>, RerankAPIError> {
+    let (reply_tx, reply_rx) = oneshot::channel();
+
+    let worker_req = WorkerRequest {
+        input: request,
+        reply: reply_tx,
+    };
+
+    let start = Instant::now();
+
+    if state.tx.send(worker_req).await.is_err() {
+        tracing::error!("Could not reach the worker channel");
+        return Err(RerankAPIError::WorkerUnavailableError);
+    }
+
+    match reply_rx.await {
+        Ok((response_opt, error_opt)) => {
+            if let Some(response) = response_opt {
+                let elapsed = start.elapsed().as_millis();
+                let msg = format!(
+                    "Reranked {} documents in {}ms",
+                    response.items.len(),
+                    elapsed
+                );
+                tracing::info!(msg);
+                Ok(Json(response))
+            } else {
+                let msg = error_opt.unwrap_or("unknown error".to_string());
+                tracing::error!(msg);
+                Err(RerankAPIError::InferenceError(msg))
+            }
+        }
+        Err(e) => {
+            let msg = format!(
+                "Error while trying to get a response from the worker: {}",
+                e
+            );
+            tracing::error!(msg);
+            Err(RerankAPIError::ChannelError(e.to_string()))
+        }
+    }
+}
+
+#[tokio::main]
+async fn main() {
+    let args = Args::parse();
+
+    tracing_subscriber::fmt().pretty().init();
+
+    let tx = spawn_inference_worker(PathBuf::from(args.model), PathBuf::from(args.tokenizer));
+    let state = AppState { tx };
+
+    let app = Router::new()
+        .route("/rerank", post(rerank))
+        .with_state(state);
+
+    let bind_address = args.bind.unwrap_or("0.0.0.0:7432".to_string());
+
+    let listener = tokio::net::TcpListener::bind(&bind_address).await.unwrap();
+
+    let msg = format!("Server running on {}", &bind_address);
+    tracing::info!(msg);
+
+    axum::serve(listener, app).await.unwrap();
+}

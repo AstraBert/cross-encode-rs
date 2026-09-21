@@ -9,9 +9,7 @@
 import json
 
 import torch
-
 from sentence_transformers import CrossEncoder
-
 
 # 1. Load a pre-trained CrossEncoder model
 model = CrossEncoder("cross-encoder/ms-marco-TinyBERT-L2-v2", num_labels=1)
@@ -30,7 +28,9 @@ passages = [
     "Berlin has a yearly total of about 135 million day visitors, which puts it in third place among the most-visited city destinations in the European Union.",
 ]
 
-ranks = model.rank(query, passages, return_documents=True, activation_fn=torch.nn.Sigmoid())
+ranks = model.rank(
+    query, passages, return_documents=True, activation_fn=torch.nn.Sigmoid()
+)
 ranks.sort(key=lambda x: x["corpus_id"])
 
 with open("crates/cross-encode-rs/testfiles/scores.jsonl", "w") as f:

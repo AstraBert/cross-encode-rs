@@ -1,0 +1,6 @@
+scripts/
+.venv/
+target/
+crates/**/test*
+README.md
+load-test/
