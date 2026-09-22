@@ -27,11 +27,11 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--data", default="data/data.jsonl.gz", help="Path to the gzipped JSONL dataset")
 parser.add_argument(
     "--st-model",
-    default="cross-encoder/ms-marco-MiniLM-L6-v2",
+    default="Xenova/ms-marco-MiniLM-L-6-v2",
     help="sentence-transformers model id or path",
 )
 parser.add_argument(
-    "--fastembed-model",
+   "--fastembed-model",
     default="Xenova/ms-marco-MiniLM-L-6-v2",
     help="fastembed reranker model name",
 )
