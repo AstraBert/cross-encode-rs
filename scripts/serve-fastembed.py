@@ -14,7 +14,6 @@ the Rust/ONNX server. Exposes the same `/rerank` request/response shape.
 import argparse
 import time
 
-import torch
 import uvicorn
 from fastapi import FastAPI
 from fastembed.rerank.cross_encoder import TextCrossEncoder
