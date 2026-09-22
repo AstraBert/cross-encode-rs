@@ -1,0 +1,16 @@
+Total requests: 1000
+Successful requests: 1000
+Failed requests: 0
+Success rate: 100.00%
+Average response time: 8267.28 ms
+Total test duration: 9.320818253s
+Requests per second: 107.29
+Total requests: 10000
+Successful requests: 9550
+Failed requests: 450
+Success rate: 95.50%
+Average response time: 8464.14 ms
+Total test duration: 1m26.286287579s
+Requests per second: 115.89
+Failure reasons:
+    450  connection error: Post "https://clelias-macbook-pro.olm-gecko.ts.net/cross-encoder/rerank": context deadline exceeded (Client.Timeout exceeded while awaiting headers)

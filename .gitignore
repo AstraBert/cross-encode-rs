@@ -2,3 +2,4 @@ target/
 .venv/
 .ruff_cache/
 .env
+xenova/

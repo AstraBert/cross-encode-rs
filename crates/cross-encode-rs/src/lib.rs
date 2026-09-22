@@ -18,8 +18,6 @@ pub mod hf;
 pub mod inference;
 pub mod tokenizer;
 
-pub const DEFAULT_INTRA_THREADS: usize = 4;
-
 #[derive(Debug)]
 pub struct CrossEncoder {
     pub tokenizer_path: PathBuf,
@@ -34,6 +32,12 @@ pub struct RerankResult<'a> {
     pub index: usize,
     pub score: f32,
     pub document: Option<&'a str>,
+}
+
+fn default_threads() -> usize {
+    std::thread::available_parallelism()
+        .map(|n| n.get())
+        .unwrap_or(1)
 }
 
 impl CrossEncoder {
@@ -70,7 +74,7 @@ impl CrossEncoder {
         }
         let model = Session::builder()?
             .with_optimization_level(GraphOptimizationLevel::Level3)?
-            .with_intra_threads(self.intra_threads.unwrap_or(DEFAULT_INTRA_THREADS))?
+            .with_intra_threads(self.intra_threads.unwrap_or(default_threads()))?
             .commit_from_file(&self.model_path)?;
 
         self.model = Some(model);
@@ -121,6 +125,11 @@ impl CrossEncoder {
 
 #[cfg(test)]
 mod tests {
+    use std::{
+        io::Read,
+        process::{Command, Stdio},
+    };
+
     use super::*;
 
     fn test_encoder() -> CrossEncoder {
@@ -174,6 +183,57 @@ mod tests {
         for (idx, result) in results.iter().enumerate() {
             assert_eq!(result.index, idx);
             assert_eq!(result.document, Some(documents[idx]));
+        }
+    }
+
+    #[test]
+    fn test_default_threads() {
+        if std::env::consts::OS == "linux" {
+            let cmd = Command::new("nproc")
+                .stdout(Stdio::piped())
+                .stderr(Stdio::piped())
+                .spawn()
+                .expect("Should be able to spawn command");
+            let output = cmd
+                .wait_with_output()
+                .expect("Command should exit successfully");
+            let mut s = String::new();
+            let mut serr = String::new();
+            output
+                .stdout
+                .as_slice()
+                .read_to_string(&mut s)
+                .expect("Should read to string");
+            output
+                .stderr
+                .as_slice()
+                .read_to_string(&mut serr)
+                .expect("Should read to string");
+            let nproc: usize = s.trim().parse().expect("Should parse to a number");
+            let threads = default_threads();
+            assert_eq!(nproc, threads);
+        } else if std::env::consts::OS == "macos" {
+            let cmd = Command::new("getconf")
+                .arg("_NPROCESSORS_ONLN")
+                .stdout(Stdio::piped())
+                .stderr(Stdio::piped())
+                .spawn()
+                .expect("Should be able to spawn command");
+            let output = cmd
+                .wait_with_output()
+                .expect("Command should exit successfully");
+            let mut s = String::new();
+            output
+                .stdout
+                .as_slice()
+                .read_to_string(&mut s)
+                .expect("Should read to string");
+            let nproc: usize = s.trim().parse().expect("Should parse to a number");
+            let threads = default_threads();
+            assert_eq!(nproc, threads);
+        } else {
+            // skip
+            return;
         }
     }
 

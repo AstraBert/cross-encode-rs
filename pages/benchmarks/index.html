@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>cross-encode-rs benchmark results</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 2rem 1.25rem 4rem;
+    background: #fcfcfb;
+    color: #0b0b0b;
+    font: 15px/1.5 -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+  }
+  main { max-width: 960px; margin: 0 auto; }
+  h1 { font-size: 1.6rem; margin: 0 0 .25rem; }
+  h2 { font-size: 1.15rem; margin: 2.5rem 0 .25rem; }
+  .subtitle { color: #52514e; margin: 0 0 2rem; }
+  .note { color: #52514e; font-size: .9rem; margin: .25rem 0 1rem; }
+  section.chart {
+    border: 1px solid #e4e2dc;
+    border-radius: 8px;
+    padding: 1.25rem 1.5rem 1.5rem;
+    margin: 1rem 0 2rem;
+    background: #fff;
+  }
+  .legend { display: flex; gap: 1.25rem; flex-wrap: wrap; margin: .25rem 0 1rem; font-size: .9rem; }
+  .legend span { display: inline-flex; align-items: center; gap: .4rem; color: #52514e; }
+  .swatch { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+  svg { display: block; width: 100%; height: auto; }
+  .bar-label { font-size: 12px; fill: #0b0b0b; }
+  .cat-label { font-size: 12px; fill: #52514e; }
+  .gridline { stroke: #e4e2dc; stroke-width: 1; }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-top: 1rem;
+    font-size: .85rem;
+  }
+  caption { text-align: left; color: #52514e; font-size: .8rem; margin-bottom: .4rem; }
+  th, td { text-align: right; padding: .3rem .6rem; border-bottom: 1px solid #e4e2dc; }
+  th:first-child, td:first-child { text-align: left; }
+  th { color: #52514e; font-weight: 600; }
+  tbody tr:last-child td { border-bottom: none; }
+  footer { color: #52514e; font-size: .8rem; margin-top: 3rem; }
+  .index-list { list-style: none; padding: 0; margin: 1.5rem 0; }
+  .index-list li { padding: 1rem 0; border-bottom: 1px solid #e4e2dc; }
+  .index-list a { font-size: 1.05rem; font-weight: 600; color: #0b0b0b; }
+  a { color: #2a78d6; }
+</style>
+</head>
+<body>
+<main>
+  <p class="note"><a href="../">&larr; all results</a></p>
+  <h1>cross-encode-rs benchmark results</h1>
+  <p class="subtitle">Rerank latency across the cross-encode-rs (Rust/ONNX), fastembed, and sentence-transformers (ONNX backend) libraries, run over the same dataset.</p>
+  <section class="chart">
+    <h2>Per-request latency (ms, lower is better)</h2>
+    
+    <div class="legend"><span><span class="swatch" style="background:#2a78d6"></span>cross-encode-rs</span><span><span class="swatch" style="background:#eb6834"></span>fastembed</span><span><span class="swatch" style="background:#1baf7a"></span>sentence-transformers</span></div>
+    <svg viewBox="0 0 880 380" role="img" aria-label="grouped bar chart">
+<line class="gridline" x1="130.0" y1="8" x2="130.0" y2="372"/>
+<line class="gridline" x1="300.0" y1="8" x2="300.0" y2="372"/>
+<line class="gridline" x1="470.0" y1="8" x2="470.0" y2="372"/>
+<line class="gridline" x1="640.0" y1="8" x2="640.0" y2="372"/>
+<line class="gridline" x1="810.0" y1="8" x2="810.0" y2="372"/>
+<text class="cat-label" x="120" y="42.0" text-anchor="end">min</text>
+<rect x="130" y="8.0" width="20.3" height="18" rx="4" fill="#2a78d6"/>
+<text class="bar-label" x="158.3" y="21.0">15.97 ms</text>
+<rect x="130" y="29.0" width="17.5" height="18" rx="4" fill="#eb6834"/>
+<text class="bar-label" x="155.5" y="42.0">13.79 ms</text>
+<rect x="130" y="50.0" width="110.4" height="18" rx="4" fill="#1baf7a"/>
+<text class="bar-label" x="248.4" y="63.0">86.89 ms</text>
+<text class="cat-label" x="120" y="118.0" text-anchor="end">p50</text>
+<rect x="130" y="84.0" width="32.2" height="18" rx="4" fill="#2a78d6"/>
+<text class="bar-label" x="170.2" y="97.0">25.35 ms</text>
+<rect x="130" y="105.0" width="34.9" height="18" rx="4" fill="#eb6834"/>
+<text class="bar-label" x="172.9" y="118.0">27.45 ms</text>
+<rect x="130" y="126.0" width="270.7" height="18" rx="4" fill="#1baf7a"/>
+<text class="bar-label" x="408.7" y="139.0">213.08 ms</text>
+<text class="cat-label" x="120" y="194.0" text-anchor="end">p90</text>
+<rect x="130" y="160.0" width="38.8" height="18" rx="4" fill="#2a78d6"/>
+<text class="bar-label" x="176.8" y="173.0">30.56 ms</text>
+<rect x="130" y="181.0" width="45.9" height="18" rx="4" fill="#eb6834"/>
+<text class="bar-label" x="183.9" y="194.0">36.16 ms</text>
+<rect x="130" y="202.0" width="357.2" height="18" rx="4" fill="#1baf7a"/>
+<text class="bar-label" x="495.2" y="215.0">281.10 ms</text>
+<text class="cat-label" x="120" y="270.0" text-anchor="end">p99</text>
+<rect x="130" y="236.0" width="50.4" height="18" rx="4" fill="#2a78d6"/>
+<text class="bar-label" x="188.4" y="249.0">39.67 ms</text>
+<rect x="130" y="257.0" width="62.6" height="18" rx="4" fill="#eb6834"/>
+<text class="bar-label" x="200.6" y="270.0">49.23 ms</text>
+<rect x="130" y="278.0" width="475.5" height="18" rx="4" fill="#1baf7a"/>
+<text class="bar-label" x="613.5" y="291.0">374.26 ms</text>
+<text class="cat-label" x="120" y="346.0" text-anchor="end">max</text>
+<rect x="130" y="312.0" width="101.5" height="18" rx="4" fill="#2a78d6"/>
+<text class="bar-label" x="239.5" y="325.0">79.87 ms</text>
+<rect x="130" y="333.0" width="91.2" height="18" rx="4" fill="#eb6834"/>
+<text class="bar-label" x="229.2" y="346.0">71.80 ms</text>
+<rect x="130" y="354.0" width="680.0" height="18" rx="4" fill="#1baf7a"/>
+<text class="bar-label" x="818.0" y="367.0">535.18 ms</text>
+</svg>
+    <table>
+  <caption>Exact figures</caption>
+  <thead><tr><th>percentile</th><th>cross-encode-rs</th><th>fastembed</th><th>sentence-transformers</th></tr></thead>
+  <tbody><tr><td>min</td><td>15.97 ms</td><td>13.79 ms</td><td>86.89 ms</td></tr><tr><td>p50</td><td>25.35 ms</td><td>27.45 ms</td><td>213.08 ms</td></tr><tr><td>p90</td><td>30.56 ms</td><td>36.16 ms</td><td>281.10 ms</td></tr><tr><td>p99</td><td>39.67 ms</td><td>49.23 ms</td><td>374.26 ms</td></tr><tr><td>max</td><td>79.87 ms</td><td>71.80 ms</td><td>535.18 ms</td></tr></tbody>
+</table>
+  </section>
+  <section class="chart">
+    <h2>Per-document latency (ms, lower is better)</h2>
+    
+    <div class="legend"><span><span class="swatch" style="background:#2a78d6"></span>cross-encode-rs</span><span><span class="swatch" style="background:#eb6834"></span>fastembed</span><span><span class="swatch" style="background:#1baf7a"></span>sentence-transformers</span></div>
+    <svg viewBox="0 0 880 380" role="img" aria-label="grouped bar chart">
+<line class="gridline" x1="130.0" y1="8" x2="130.0" y2="372"/>
+<line class="gridline" x1="300.0" y1="8" x2="300.0" y2="372"/>
+<line class="gridline" x1="470.0" y1="8" x2="470.0" y2="372"/>
+<line class="gridline" x1="640.0" y1="8" x2="640.0" y2="372"/>
+<line class="gridline" x1="810.0" y1="8" x2="810.0" y2="372"/>
+<text class="cat-label" x="120" y="42.0" text-anchor="end">min</text>
+<rect x="130" y="8.0" width="20.3" height="18" rx="4" fill="#2a78d6"/>
+<text class="bar-label" x="158.3" y="21.0">0.532 ms</text>
+<rect x="130" y="29.0" width="17.5" height="18" rx="4" fill="#eb6834"/>
+<text class="bar-label" x="155.5" y="42.0">0.460 ms</text>
+<rect x="130" y="50.0" width="110.5" height="18" rx="4" fill="#1baf7a"/>
+<text class="bar-label" x="248.5" y="63.0">2.900 ms</text>
+<text class="cat-label" x="120" y="118.0" text-anchor="end">p50</text>
+<rect x="130" y="84.0" width="32.5" height="18" rx="4" fill="#2a78d6"/>
+<text class="bar-label" x="170.5" y="97.0">0.852 ms</text>
+<rect x="130" y="105.0" width="35.1" height="18" rx="4" fill="#eb6834"/>
+<text class="bar-label" x="173.1" y="118.0">0.920 ms</text>
+<rect x="130" y="126.0" width="272.5" height="18" rx="4" fill="#1baf7a"/>
+<text class="bar-label" x="410.5" y="139.0">7.150 ms</text>
+<text class="cat-label" x="120" y="194.0" text-anchor="end">p90</text>
+<rect x="130" y="160.0" width="39.2" height="18" rx="4" fill="#2a78d6"/>
+<text class="bar-label" x="177.2" y="173.0">1.028 ms</text>
+<rect x="130" y="181.0" width="46.1" height="18" rx="4" fill="#eb6834"/>
+<text class="bar-label" x="184.1" y="194.0">1.210 ms</text>
+<rect x="130" y="202.0" width="359.8" height="18" rx="4" fill="#1baf7a"/>
+<text class="bar-label" x="497.8" y="215.0">9.440 ms</text>
+<text class="cat-label" x="120" y="270.0" text-anchor="end">p99</text>
+<rect x="130" y="236.0" width="50.5" height="18" rx="4" fill="#2a78d6"/>
+<text class="bar-label" x="188.5" y="249.0">1.324 ms</text>
+<rect x="130" y="257.0" width="62.5" height="18" rx="4" fill="#eb6834"/>
+<text class="bar-label" x="200.5" y="270.0">1.640 ms</text>
+<rect x="130" y="278.0" width="475.7" height="18" rx="4" fill="#1baf7a"/>
+<text class="bar-label" x="613.7" y="291.0">12.480 ms</text>
+<text class="cat-label" x="120" y="346.0" text-anchor="end">max</text>
+<rect x="130" y="312.0" width="101.5" height="18" rx="4" fill="#2a78d6"/>
+<text class="bar-label" x="239.5" y="325.0">2.662 ms</text>
+<rect x="130" y="333.0" width="91.1" height="18" rx="4" fill="#eb6834"/>
+<text class="bar-label" x="229.1" y="346.0">2.390 ms</text>
+<rect x="130" y="354.0" width="680.0" height="18" rx="4" fill="#1baf7a"/>
+<text class="bar-label" x="818.0" y="367.0">17.840 ms</text>
+</svg>
+    <table>
+  <caption>Exact figures</caption>
+  <thead><tr><th>percentile</th><th>cross-encode-rs</th><th>fastembed</th><th>sentence-transformers</th></tr></thead>
+  <tbody><tr><td>min</td><td>0.532 ms</td><td>0.460 ms</td><td>2.900 ms</td></tr><tr><td>p50</td><td>0.852 ms</td><td>0.920 ms</td><td>7.150 ms</td></tr><tr><td>p90</td><td>1.028 ms</td><td>1.210 ms</td><td>9.440 ms</td></tr><tr><td>p99</td><td>1.324 ms</td><td>1.640 ms</td><td>12.480 ms</td></tr><tr><td>max</td><td>2.662 ms</td><td>2.390 ms</td><td>17.840 ms</td></tr></tbody>
+</table>
+  </section>
+
+  <footer>Generated by scripts/render-benchmark-charts.py from the source .txt files. Re-run it after updating results.</footer>
+</main>
+</body>
+</html>

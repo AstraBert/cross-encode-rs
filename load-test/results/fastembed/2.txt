@@ -1,0 +1,14 @@
+Total requests: 1000
+Successful requests: 1000
+Failed requests: 0
+Success rate: 100.00%
+Average response time: 3767.61 ms
+Total test duration: 4.581022441s
+Requests per second: 218.29
+Total requests: 10000
+Successful requests: 10000
+Failed requests: 0
+Success rate: 100.00%
+Average response time: 3756.15 ms
+Total test duration: 38.391180786s
+Requests per second: 260.48

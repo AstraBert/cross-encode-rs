@@ -67,3 +67,51 @@ docker build . -t cross-encoder-server
 ```
 
 Expects `model.onnx` and `tokenizer.json` at the workspace root at build time.
+
+## Benchmarks
+
+View benchmark results [here](https://astrabert.github.io/cross-encode-rs/). All results come from benchmark runs on a Mac M4 Max, with 48GB RAM and 14CPU (ARM architecture).
+
+> [!NOTE]
+>
+> For a fair comparison, here `sentence-transformers` is used with the `onnx` backend, not `torch` (default).
+
+### Static
+
+Static benchmarks are run against `sentence-transformers` and `fastembed` on [mteb/scidocs-reranking](https://huggingface.co/datasets/mteb/scidocs-reranking).
+
+For `cross-encode-rs`, you need to download `model.onnx` and `tokenizer.json` from [Xenova/ms-marco-MiniLM-L-6-v2](https://huggingface.co/Xenova/ms-marco-MiniLM-L-6-v2) and place them under `xenova/`.
+
+```bash
+# from the repo root
+
+# cross-encode-rs 
+cargo build --release -p benchmarks
+./target/release/benchmarks
+
+# fastembed and sentence-transformers
+# (needs uv)
+./scripts/benchmark-python.py
+```
+
+### Server
+
+The Axum-based server in [crates/server](crates/server/src/main.rs) is compared against FastAPI-based servers with [`sentence-transformers`](scripts/serve-python.py) and [`fastembed`](scripts/serve-fastembed.py). See more in the [dedicated README](./load-test/README.md).
+
+The reported results are achieved by running (as server processes):
+
+```bash
+# Axum server
+cargo build --release -p server
+./target/release/server --model xenova/model.onnx \
+    --tokenizer xenova/tokenizer.json \
+    --threads 1 \
+    --workers 14 \
+    --buffer-size 1000000
+
+# FastAPI + sentence-transformers
+./scripts/serve-python.py  --model Xenova/ms-marco-MiniLM-L-6-v2 
+
+# FastAPI + fastembed
+./scripts/serve-fastembed.py
+```
