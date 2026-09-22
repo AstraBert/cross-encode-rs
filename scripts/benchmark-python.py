@@ -24,14 +24,16 @@ from sentence_transformers import CrossEncoder
 from tqdm import tqdm
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--data", default="data/data.jsonl.gz", help="Path to the gzipped JSONL dataset")
+parser.add_argument(
+    "--data", default="data/data.jsonl.gz", help="Path to the gzipped JSONL dataset"
+)
 parser.add_argument(
     "--st-model",
     default="Xenova/ms-marco-MiniLM-L-6-v2",
     help="sentence-transformers model id or path",
 )
 parser.add_argument(
-   "--fastembed-model",
+    "--fastembed-model",
     default="Xenova/ms-marco-MiniLM-L-6-v2",
     help="fastembed reranker model name",
 )
@@ -122,7 +124,9 @@ def print_report(entry_durations: list[float], doc_counts: list[int]) -> None:
     print(format_duration_stats(Stats.from_values(per_doc_durations)))
 
 
-def benchmark_sentence_transformers(entries: list[dict], model_name: str) -> tuple[list[float], list[int]]:
+def benchmark_sentence_transformers(
+    entries: list[dict], model_name: str
+) -> tuple[list[float], list[int]]:
     model = CrossEncoder(model_name, num_labels=1, backend="onnx")
 
     durations = []
@@ -137,7 +141,9 @@ def benchmark_sentence_transformers(entries: list[dict], model_name: str) -> tup
     return durations, doc_counts
 
 
-def benchmark_fastembed(entries: list[dict], model_name: str) -> tuple[list[float], list[int]]:
+def benchmark_fastembed(
+    entries: list[dict], model_name: str
+) -> tuple[list[float], list[int]]:
     model = TextCrossEncoder(model_name=model_name)
 
     durations = []

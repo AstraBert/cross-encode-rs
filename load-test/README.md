@@ -1,6 +1,6 @@
 # load-test
 
-Go load-test client for `crates/server`, plus a Python reference server for comparing inference performance.
+Go load-test client for `crates/server`, plus Python reference servers for comparing inference performance.
 
 ## Client (`main.go`)
 
@@ -36,20 +36,25 @@ If `ulimit -Hn` is also too low: `sudo launchctl limit maxfiles 65536 200000`, t
 
 ## `send_requests.sh`
 
-Runs the client at 1000 and 10,000 requests:
+Runs a warmup (100 requests), then `<turns>` repeats at 1000 and 10,000 requests each, appending to `results/<name>/<i>.txt`:
 
 ```bash
-ENDPOINT=http://127.0.0.1:7432/rerank ./send_requests.sh
+ENDPOINT=http://127.0.0.1:7432/rerank ./send_requests.sh 3 cross-encode-rs
 ```
 
-## Python reference server (`../scripts/serve-python.py`)
+## Python reference servers
 
-Same request/response shape as `crates/server`, same model (`cross-encoder/ms-marco-TinyBERT-L2-v2`, sigmoid-activated), ONNX Runtime backend — isolates the serving layer instead of comparing PyTorch vs ONNX Runtime.
+Same request/response shape as `crates/server`, same model, so the comparison isolates the serving layer:
+
+- `../scripts/serve-python.py` — sentence-transformers, ONNX Runtime backend.
+- `../scripts/serve-fastembed.py` — fastembed.
 
 ```bash
 ./scripts/serve-python.py --port 7433
+# or
+./scripts/serve-fastembed.py --port 7433
 ```
 
 ## Results
 
-`results/cross-encode-rs.txt` and `results/python.txt` hold 1000/10,000-request runs.
+`results/<name>/<i>.txt` holds repeated `send_requests.sh` runs per system (`cross-encode-rs`, `fastembed`, `sentence-transformers`). Render them into an HTML report with `../scripts/render-benchmark-charts.py`.
