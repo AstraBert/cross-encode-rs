@@ -61,7 +61,7 @@ struct DataEntry {
 }
 
 impl DataEntry {
-    fn to_rerank_input<'a>(&'a self) -> (&'a str, Vec<&'a str>) {
+    fn to_rerank_input(&self) -> (&str, Vec<&str>) {
         let mut v: Vec<&str> = self.positive.iter().map(|s| s.as_str()).collect();
         let mut n: Vec<&str> = self.negative.iter().map(|s| s.as_str()).collect();
         v.append(&mut n);
