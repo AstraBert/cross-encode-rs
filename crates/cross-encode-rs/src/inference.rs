@@ -4,6 +4,8 @@ use tokenizers::Encoding;
 
 use crate::errors::CrossEncoderError;
 
+/// Runs the ONNX model over a batch of encodings and returns relevance
+/// scores in `[0, 1]` (sigmoid for a single-label head, softmax for two).
 pub fn run_inference(
     session: &mut Session,
     encodings: Vec<Encoding>,

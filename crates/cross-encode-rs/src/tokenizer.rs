@@ -1,7 +1,4 @@
-//! Tokenization utilities for the `statembed` library.
-//!
-//! This module provides helpers for loading `tokie` from JSON files,
-//! encoding text, and extracting vocabulary statistics such as median token length.
+//! Tokenizer loading and query/document batch encoding.
 
 use std::path::PathBuf;
 
@@ -11,14 +8,9 @@ use crate::errors::CrossEncoderError;
 
 const DEFAULT_MAX_LENGTH: usize = 512;
 
-/// Loads a `Tokenizer` from a JSON file on disk.
-///
-/// Returns also the ID of the `unk_token` if one is defined in the model config.
-///
-/// # Arguments
-/// * `path` - Path to the `tokenizer.json` file.
-/// * `fallback_truncation_length` - truncation length for the tokenizer, in case
-///   one isn't already configured
+/// Loads a tokenizer from a `tokenizer.json` file, forcing batch-longest
+/// padding and, unless the file already configures its own, truncation at
+/// `fallback_truncation_length` (default 512).
 pub fn load_tokenizer(
     path: impl Into<PathBuf>,
     fallback_truncation_length: Option<usize>,
@@ -45,6 +37,7 @@ pub fn load_tokenizer(
     Ok(tokenizer)
 }
 
+/// Encodes each `(query, document)` pair for cross-encoder input.
 pub fn encode_batch(
     tk: &Tokenizer,
     query: &str,

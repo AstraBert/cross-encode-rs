@@ -4,7 +4,6 @@ use ort::session::{Session, builder::GraphOptimizationLevel};
 use tokenizers::Tokenizer;
 
 use crate::{
-    errors::CrossEncoderError,
     inference::run_inference,
     tokenizer::{encode_batch, load_tokenizer},
 };
@@ -18,6 +17,10 @@ pub mod hf;
 pub mod inference;
 pub mod tokenizer;
 
+pub use errors::CrossEncoderError;
+
+/// Scores documents against a query with an ONNX cross-encoder. Model and
+/// tokenizer are lazily loaded on first use.
 #[derive(Debug)]
 pub struct CrossEncoder {
     pub tokenizer_path: PathBuf,
@@ -28,6 +31,8 @@ pub struct CrossEncoder {
     tokenizer: Option<Tokenizer>,
 }
 
+/// A single document's rerank outcome: its original index, relevance score
+/// in `[0, 1]`, and, if requested, the document text.
 #[derive(Debug, Clone, Copy)]
 pub struct RerankResult<'a> {
     pub index: usize,
@@ -42,6 +47,8 @@ fn default_threads() -> usize {
 }
 
 impl CrossEncoder {
+    /// Builds a `CrossEncoder` for local model/tokenizer files. Nothing is
+    /// loaded yet; use [`CrossEncoder::initialize`] or call [`CrossEncoder::rerank`] directly.
     pub fn new(
         tokenizer_path: PathBuf,
         model_path: PathBuf,
@@ -58,6 +65,8 @@ impl CrossEncoder {
         }
     }
 
+    /// Downloads model/tokenizer from the Hugging Face Hub, then builds a
+    /// `CrossEncoder` from the cached files.
     #[cfg(feature = "hf-hub")]
     pub async fn from_hf_hub(
         model_id: &str,
@@ -102,6 +111,7 @@ impl CrossEncoder {
         Ok(())
     }
 
+    /// Eagerly loads the tokenizer and model, instead of on first [`CrossEncoder::rerank`] call.
     pub fn initialize(&mut self) -> Result<(), CrossEncoderError> {
         self.init_tokenizer()?;
         self.init_model()?;
@@ -109,6 +119,7 @@ impl CrossEncoder {
         Ok(())
     }
 
+    /// Scores each document against `query`, preserving input order.
     pub fn rerank<'a>(
         &'a mut self,
         query: &str,

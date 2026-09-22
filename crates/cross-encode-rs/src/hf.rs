@@ -4,9 +4,11 @@ use hf_hub::{HFClient, RepoTypeModel};
 
 use crate::errors::CrossEncoderError;
 
+/// Files pulled from a Hugging Face model repo, model then tokenizer.
 pub const DOWNLOAD_FILES: &[&str] = &["onnx/model.onnx", "tokenizer.json"];
 pub static HF_CACHE_DIR: OnceLock<PathBuf> = OnceLock::new();
 
+/// Local cache directory for downloaded models, `~/.cross-encode-rs`.
 pub fn hf_cache_dir() -> &'static PathBuf {
     HF_CACHE_DIR.get_or_init(|| {
         dirs::home_dir()
@@ -15,6 +17,9 @@ pub fn hf_cache_dir() -> &'static PathBuf {
     })
 }
 
+/// Downloads a model's ONNX weights and tokenizer from the Hugging Face Hub
+/// into the local cache, skipping files already cached unless
+/// `force_download` is set. Returns `(model_path, tokenizer_path)`.
 pub async fn download_from_hub(
     model_id: &str,
     force_download: bool,

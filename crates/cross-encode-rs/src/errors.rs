@@ -4,6 +4,7 @@ use std::{error::Error, fmt::Display, io};
 use hf_hub::HFError;
 use ort::session::builder::SessionBuilder;
 
+/// Errors returned by this crate.
 #[derive(Debug)]
 pub enum CrossEncoderError {
     HuggingFaceLoadError(String),
