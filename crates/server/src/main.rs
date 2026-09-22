@@ -153,7 +153,7 @@ fn spawn_inference_worker(
     let (tx, mut rx) = mpsc::channel::<WorkerRequest>(buffer_size);
 
     std::thread::spawn(move || {
-        let mut model = CrossEncoder::new(tokenizer_path, model_path, intra_threads);
+        let mut model = CrossEncoder::new(tokenizer_path, model_path, intra_threads, None);
 
         // blocking_recv because this is a plain OS thread, not an async task
         while let Some(req) = rx.blocking_recv() {

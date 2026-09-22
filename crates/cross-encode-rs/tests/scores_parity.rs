@@ -58,6 +58,7 @@ fn rerank_scores_match_python_reference() {
         "testfiles/tokenizer.json".into(),
         "testfiles/model.onnx".into(),
         None,
+        None,
     );
     let mut results = ce
         .rerank(QUERY, DOCUMENTS, false)

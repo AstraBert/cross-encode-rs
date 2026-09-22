@@ -78,7 +78,8 @@ mod tests {
 
     #[test]
     fn run_inference_returns_one_score_per_document() {
-        let tokenizer = load_tokenizer("testfiles/tokenizer.json").expect("tokenizer should load");
+        let tokenizer =
+            load_tokenizer("testfiles/tokenizer.json", None).expect("tokenizer should load");
         let documents = [
             "rust is a language",
             "paris is in france",
@@ -99,7 +100,8 @@ mod tests {
 
     #[test]
     fn run_inference_ranks_relevant_document_higher() {
-        let tokenizer = load_tokenizer("testfiles/tokenizer.json").expect("tokenizer should load");
+        let tokenizer =
+            load_tokenizer("testfiles/tokenizer.json", None).expect("tokenizer should load");
         let documents = [
             "rust is a systems programming language",
             "paris is in france",

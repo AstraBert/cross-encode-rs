@@ -157,6 +157,7 @@ fn main() -> Result<(), BenchmarkError> {
         PathBuf::from(TOKENIZER_PATH),
         PathBuf::from(MODEL_PATH),
         None,
+        None,
     );
     let entries = jsonl_content_to_data(&read_gz_to_string(DATA_PATH)?)?;
 

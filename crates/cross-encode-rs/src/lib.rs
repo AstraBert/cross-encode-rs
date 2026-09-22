@@ -23,6 +23,7 @@ pub struct CrossEncoder {
     pub tokenizer_path: PathBuf,
     pub model_path: PathBuf,
     pub intra_threads: Option<usize>,
+    pub fallback_tokenizer_max_length: Option<usize>,
     model: Option<Session>,
     tokenizer: Option<Tokenizer>,
 }
@@ -41,11 +42,17 @@ fn default_threads() -> usize {
 }
 
 impl CrossEncoder {
-    pub fn new(tokenizer_path: PathBuf, model_path: PathBuf, intra_threads: Option<usize>) -> Self {
+    pub fn new(
+        tokenizer_path: PathBuf,
+        model_path: PathBuf,
+        intra_threads: Option<usize>,
+        fallback_tokenizer_max_length: Option<usize>,
+    ) -> Self {
         Self {
             model_path,
             tokenizer_path,
             intra_threads,
+            fallback_tokenizer_max_length,
             tokenizer: None,
             model: None,
         }
@@ -56,6 +63,7 @@ impl CrossEncoder {
         model_id: &str,
         force_download: bool,
         intra_threads: Option<usize>,
+        fallback_tokenizer_max_length: Option<usize>,
     ) -> Result<Self, CrossEncoderError> {
         let (model_path, tokenizer_path) = download_from_hub(model_id, force_download).await?;
 
@@ -63,6 +71,7 @@ impl CrossEncoder {
             model_path,
             tokenizer_path,
             intra_threads,
+            fallback_tokenizer_max_length,
             model: None,
             tokenizer: None,
         })
@@ -86,7 +95,17 @@ impl CrossEncoder {
             return Ok(());
         }
 
-        self.tokenizer = Some(load_tokenizer(&self.tokenizer_path)?);
+        self.tokenizer = Some(load_tokenizer(
+            &self.tokenizer_path,
+            self.fallback_tokenizer_max_length,
+        )?);
+        Ok(())
+    }
+
+    pub fn initialize(&mut self) -> Result<(), CrossEncoderError> {
+        self.init_tokenizer()?;
+        self.init_model()?;
+
         Ok(())
     }
 
@@ -136,6 +155,7 @@ mod tests {
         CrossEncoder::new(
             "testfiles/tokenizer.json".into(),
             "testfiles/model.onnx".into(),
+            None,
             None,
         )
     }
@@ -259,10 +279,24 @@ mod tests {
     }
 
     #[test]
+    fn rerank_truncates_documents_longer_than_max_position_embeddings() {
+        let mut ce = test_encoder();
+        // Long enough that, un-truncated, query + document tokenizes past
+        // the model's 512-token position embedding table and ONNX Runtime
+        // fails with a broadcast error instead of a document score.
+        let long_document = "word ".repeat(3000);
+
+        let result = ce.rerank("what is rust", &[long_document.as_str()], false);
+
+        assert!(result.is_ok());
+    }
+
+    #[test]
     fn rerank_fails_with_invalid_model_path() {
         let mut ce = CrossEncoder::new(
             "testfiles/tokenizer.json".into(),
             "testfiles/does-not-exist.onnx".into(),
+            None,
             None,
         );
         let result = ce.rerank("query", &["doc"], false);
@@ -274,6 +308,7 @@ mod tests {
         let mut ce = CrossEncoder::new(
             "testfiles/does-not-exist.json".into(),
             "testfiles/model.onnx".into(),
+            None,
             None,
         );
         let result = ce.rerank("query", &["doc"], false);
