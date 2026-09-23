@@ -3,3 +3,8 @@ target/
 .ruff_cache/
 .env
 xenova/
+!crates/cross-encode-rs/testfiles/model.onnx
+!crates/cross-encode-rs/testfiles/tokenizer.json
+model.onnx
+tokenizer.json
+deploy/k8s-priv/

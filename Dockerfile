@@ -33,4 +33,5 @@ COPY --from=builder /workspace/tokenizer.json ./tokenizer.json
 
 EXPOSE 7432
 
+ENV RUST_LOG=error
 CMD ["cross-encoder-server", "--model", "model.onnx", "--tokenizer", "tokenizer.json", "--buffer-size", "1000"]

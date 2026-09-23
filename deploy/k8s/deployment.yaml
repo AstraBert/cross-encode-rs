@@ -1,0 +1,92 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cross-encoder
+  labels:
+    app: cross-encoder
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      # With one pod per node there is no spare node to surge onto,
+      # so replace pods one at a time and keep the other serving.
+      maxSurge: 0
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: cross-encoder
+  template:
+    metadata:
+      labels:
+        app: cross-encoder
+    spec:
+      # Only nodes labelled for inference: `kubectl label node <node> cross-encoder=enabled`
+      nodeSelector:
+        cross-encoder: enabled
+      # Lets the pod run on a node tainted so nothing else lands there
+      # (e.g. the Mac: `kubectl taint node <mac> dedicated=cross-encoder:NoSchedule`).
+      tolerations:
+        - key: dedicated
+          operator: Equal
+          value: cross-encoder
+          effect: NoSchedule
+      affinity:
+        podAntiAffinity:
+          # Never put both replicas on the same machine.
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app: cross-encoder
+              topologyKey: kubernetes.io/hostname
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: server
+          image: cross-encoder-server
+          args:
+            - --model=model.onnx
+            - --tokenizer=tokenizer.json
+            # Keep workers == CPU limit and one intra-op thread each,
+            # otherwise ONNX Runtime oversubscribes and gets throttled.
+            - --workers=4
+            - --threads=1
+            # Small queues: a request stuck behind a huge backlog on a
+            # dying pod is a request lost.
+            - --buffer-size=64
+          env:
+            - name: OMP_NUM_THREADS
+              value: "1"
+          ports:
+            - name: http
+              containerPort: 7432
+          resources:
+            requests:
+              cpu: "4"
+              memory: 10Gi
+            limits:
+              cpu: "4"
+              memory: 15Gi
+          startupProbe:
+            httpGet:
+              path: /readyz
+              port: http
+            periodSeconds: 2
+            failureThreshold: 60
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: http
+            periodSeconds: 2
+            failureThreshold: 2
+          livenessProbe:
+            httpGet:
+              path: /livez
+              port: http
+            periodSeconds: 10
+            failureThreshold: 3
+          lifecycle:
+            # Give endpoints/Traefik time to drop this pod before SIGTERM,
+            # so no new requests arrive while it drains.
+            preStop:
+              sleep:
+                seconds: 5

@@ -68,6 +68,26 @@ docker build . -t cross-encoder-server
 
 Expects `model.onnx` and `tokenizer.json` at the workspace root at build time.
 
+### Health checks
+
+- `GET /livez` returns 200 while every inference worker thread is alive.
+- `GET /readyz` returns 200 once every worker has loaded its model. It returns 503 after SIGTERM, while in-flight requests finish.
+
+### Kubernetes
+
+Manifests are in `deploy/k8s`. They run two replicas on two different nodes, behind a Service and a Traefik route that retries failed connections on the other pod.
+
+Build the image, push it to a registry your nodes can pull from, and set that image in `deploy/k8s/kustomization.yaml`.
+
+```bash
+# Choose the nodes that run inference
+kubectl label node <node> cross-encoder=enabled
+
+kubectl apply -k deploy/k8s
+```
+
+Keep `--workers` equal to the CPU limit in `deployment.yaml`.
+
 ## Benchmarks
 
 View benchmark results [here](https://astrabert.github.io/cross-encode-rs/). All results come from benchmark runs on a Mac M4 Max, with 48GB RAM and 14CPU (ARM architecture).

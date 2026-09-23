@@ -1,0 +1,15 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: cross-encoder
+resources:
+  - namespace.yaml
+  - deployment.yaml
+  - service.yaml
+  - pdb.yaml
+  - traefik.yaml
+images:
+  - name: cross-encoder-server
+    # replace this with your registry
+    # name
+    newName: registry/cross-encoder-server
+    newTag: latest

@@ -1,0 +1,37 @@
+# Entry point with retries: if a pod's node vanishes (e.g. the Mac sleeps)
+# before Kubernetes marks it NotReady, the failed connection is retried on
+# the other pod instead of surfacing as an error to the caller.
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: cross-encoder-retry
+spec:
+  retry:
+    attempts: 3
+    initialInterval: 50ms
+---
+apiVersion: traefik.io/v1alpha1
+kind: ServersTransport
+metadata:
+  name: cross-encoder
+spec:
+  forwardingTimeouts:
+    # Fail fast on an unreachable node so the retry kicks in quickly.
+    dialTimeout: 1s
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: cross-encoder
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`cross-encoder.home`)
+      kind: Rule
+      middlewares:
+        - name: cross-encoder-retry
+      services:
+        - name: cross-encoder
+          port: 7432
+          serversTransport: cross-encoder

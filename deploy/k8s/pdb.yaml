@@ -1,0 +1,10 @@
+# Blocks voluntary disruptions (drains, upgrades) that would take both pods down.
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: cross-encoder
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: cross-encoder
