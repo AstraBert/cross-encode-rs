@@ -10,6 +10,7 @@ pub fn run_inference(
     session: &mut Session,
     encodings: Vec<Encoding>,
     k: usize,
+    use_type_ids: bool,
 ) -> Result<Vec<f32>, CrossEncoderError> {
     let padding_dim = encodings[0].len();
     let ids: Vec<i64> = encodings
@@ -28,9 +29,14 @@ pub fn run_inference(
     // Convert our flattened arrays into 2-dimensional tensors of shape [N, L].
     let a_ids = TensorRef::from_array_view(([k, padding_dim], &*ids))?;
     let a_mask = TensorRef::from_array_view(([k, padding_dim], &*mask))?;
-    let a_type_ids = TensorRef::from_array_view(([k, padding_dim], &*type_ids))?;
 
-    let outputs = session.run(ort::inputs![a_ids, a_mask, a_type_ids])?;
+    let outputs = if use_type_ids {
+        let a_type_ids = TensorRef::from_array_view(([k, padding_dim], &*type_ids))?;
+
+        session.run(ort::inputs![a_ids, a_mask, a_type_ids])?
+    } else {
+        session.run(ort::inputs![a_ids, a_mask])?
+    };
 
     let logits = outputs[0]
         .try_extract_array::<f32>()?
@@ -91,7 +97,7 @@ mod tests {
             encode_batch(&tokenizer, "what is rust", &documents).expect("encoding should succeed");
         let mut session = test_session();
 
-        let scores = run_inference(&mut session, encodings, documents.len())
+        let scores = run_inference(&mut session, encodings, documents.len(), true)
             .expect("inference should succeed");
 
         assert_eq!(scores.len(), documents.len());
@@ -112,7 +118,7 @@ mod tests {
             encode_batch(&tokenizer, "what is rust", &documents).expect("encoding should succeed");
         let mut session = test_session();
 
-        let scores = run_inference(&mut session, encodings, documents.len())
+        let scores = run_inference(&mut session, encodings, documents.len(), true)
             .expect("inference should succeed");
 
         assert!(scores[0] > scores[1]);

@@ -59,6 +59,7 @@ fn rerank_scores_match_python_reference() {
         "testfiles/model.onnx".into(),
         None,
         None,
+        true,
     );
     let mut results = ce
         .rerank(QUERY, DOCUMENTS, false)

@@ -27,6 +27,7 @@ pub struct CrossEncoder {
     pub model_path: PathBuf,
     pub intra_threads: Option<usize>,
     pub fallback_tokenizer_max_length: Option<usize>,
+    pub use_type_ids: bool,
     model: Option<Session>,
     tokenizer: Option<Tokenizer>,
 }
@@ -49,17 +50,23 @@ fn default_threads() -> usize {
 impl CrossEncoder {
     /// Builds a `CrossEncoder` for local model/tokenizer files. Nothing is
     /// loaded yet; use [`CrossEncoder::initialize`] or call [`CrossEncoder::rerank`] directly.
+    ///
+    /// Set `use_type_ids` to true if the cross-encoder is BERT-based and requires
+    /// also token type IDs for inference, `false` if it's RoBERTa-based and
+    /// only requires token IDs and the attention mask.
     pub fn new(
         tokenizer_path: PathBuf,
         model_path: PathBuf,
         intra_threads: Option<usize>,
         fallback_tokenizer_max_length: Option<usize>,
+        use_type_ids: bool,
     ) -> Self {
         Self {
             model_path,
             tokenizer_path,
             intra_threads,
             fallback_tokenizer_max_length,
+            use_type_ids,
             tokenizer: None,
             model: None,
         }
@@ -73,6 +80,7 @@ impl CrossEncoder {
         force_download: bool,
         intra_threads: Option<usize>,
         fallback_tokenizer_max_length: Option<usize>,
+        use_type_ids: bool,
     ) -> Result<Self, CrossEncoderError> {
         let (model_path, tokenizer_path) = download_from_hub(model_id, force_download).await?;
 
@@ -81,6 +89,7 @@ impl CrossEncoder {
             tokenizer_path,
             intra_threads,
             fallback_tokenizer_max_length,
+            use_type_ids,
             model: None,
             tokenizer: None,
         })
@@ -132,7 +141,7 @@ impl CrossEncoder {
             && let Some(ref mut model) = self.model
         {
             let encodings = encode_batch(tokenizer, query, documents)?;
-            let scores = run_inference(model, encodings, documents.len())?;
+            let scores = run_inference(model, encodings, documents.len(), self.use_type_ids)?;
             let mut results: Vec<RerankResult> = Vec::with_capacity(scores.len());
             for (idx, score) in scores.iter().enumerate() {
                 results.push(RerankResult {
@@ -168,6 +177,7 @@ mod tests {
             "testfiles/model.onnx".into(),
             None,
             None,
+            true,
         )
     }
 
@@ -309,6 +319,7 @@ mod tests {
             "testfiles/does-not-exist.onnx".into(),
             None,
             None,
+            true,
         );
         let result = ce.rerank("query", &["doc"], false);
         assert!(result.is_err());
@@ -321,6 +332,7 @@ mod tests {
             "testfiles/model.onnx".into(),
             None,
             None,
+            true,
         );
         let result = ce.rerank("query", &["doc"], false);
         assert!(result.is_err());

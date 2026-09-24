@@ -164,11 +164,12 @@ fn print_report(
 fn main() -> Result<(), BenchmarkError> {
     let args: Vec<String> = env::args().collect();
 
-    if args.len() != 2 {
-        return Err("This commands accept exactly one positional argument: MODEL_DIRECTORY".into());
+    if args.len() != 3 {
+        return Err("This commands accept exactly two positional arguments: MODEL_DIRECTORY (directory where model.onnx and tokenizer.json are stored) and USE_TYPE_IDS (true or false)".into());
     }
 
     let model_dir = PathBuf::from(&args[1]);
+    let use_type_ids = args[2].eq_ignore_ascii_case("true");
 
     if !model_dir.exists() {
         return Err("The provided MODEL_DIRECTORY does not exist".into());
@@ -179,6 +180,7 @@ fn main() -> Result<(), BenchmarkError> {
         model_dir.join(MODEL_BASE_NAME),
         None,
         None,
+        use_type_ids,
     );
 
     cross_encoder.initialize()?;

@@ -47,6 +47,12 @@ struct Args {
     /// cross-encoder model
     #[arg(long, short)]
     tokenizer: String,
+    /// Use this flag
+    /// with RoBERTa-based models
+    /// that do not need token type IDs
+    /// in their input
+    #[arg(long, default_value_t = false)]
+    no_type_ids: bool,
     /// Size of the worker
     /// channel buffer
     #[arg(long, short, default_value_t = 100)]
@@ -158,6 +164,7 @@ struct WorkerRequest {
 fn spawn_inference_worker(
     model_path: PathBuf,
     tokenizer_path: PathBuf,
+    use_type_ids: bool,
     buffer_size: usize,
     intra_threads: Option<usize>,
     loaded_workers: Arc<AtomicUsize>,
@@ -165,7 +172,13 @@ fn spawn_inference_worker(
     let (tx, mut rx) = mpsc::channel::<WorkerRequest>(buffer_size);
 
     std::thread::spawn(move || {
-        let mut model = CrossEncoder::new(tokenizer_path, model_path, intra_threads, None);
+        let mut model = CrossEncoder::new(
+            tokenizer_path,
+            model_path,
+            intra_threads,
+            None,
+            use_type_ids,
+        );
 
         // Load eagerly so readiness only reports true once inference can be served.
         // On failure the thread exits, closing the channel, which fails liveness.
@@ -215,6 +228,7 @@ fn spawn_inference_worker(
 fn spawn_inference_workers(
     model_path: PathBuf,
     tokenizer_path: PathBuf,
+    use_type_ids: bool,
     buffer_size: usize,
     intra_threads: Option<usize>,
     num_workers: usize,
@@ -225,6 +239,7 @@ fn spawn_inference_workers(
             spawn_inference_worker(
                 model_path.clone(),
                 tokenizer_path.clone(),
+                use_type_ids,
                 buffer_size,
                 intra_threads,
                 loaded_workers.clone(),
@@ -344,6 +359,7 @@ async fn main() {
     let workers = spawn_inference_workers(
         PathBuf::from(args.model),
         PathBuf::from(args.tokenizer),
+        !args.no_type_ids,
         args.buffer_size,
         args.threads,
         args.workers,
