@@ -29,8 +29,14 @@ parser.add_argument(
 )
 parser.add_argument(
     "--st-model",
-    default="Xenova/ms-marco-MiniLM-L-6-v2",
-    help="sentence-transformers model id or path",
+    default="",
+    help="sentence-transformers model id or path. If not provided, skips running sentence-transformers.",
+)
+parser.add_argument(
+    "--load-only",
+    default=False,
+    action="store_true",
+    help="only load models without running the benchmark",
 )
 parser.add_argument(
     "--fastembed-model",
@@ -123,12 +129,13 @@ def print_report(entry_durations: list[float], doc_counts: list[int]) -> None:
     print(f"\nPer-document latency ({len(per_doc_durations)} entries)")
     print(format_duration_stats(Stats.from_values(per_doc_durations)))
 
+def load_st_model(model_name: str) -> CrossEncoder:
+    model = CrossEncoder(model_name, num_labels=1, backend="onnx")
+    return model
 
 def benchmark_sentence_transformers(
-    entries: list[dict], model_name: str
+    entries: list[dict], model: CrossEncoder
 ) -> tuple[list[float], list[int]]:
-    model = CrossEncoder(model_name, num_labels=1, backend="onnx")
-
     durations = []
     doc_counts = []
     for entry in tqdm(entries):
@@ -140,12 +147,13 @@ def benchmark_sentence_transformers(
 
     return durations, doc_counts
 
+def load_fastembed_model(model_name: str) -> TextCrossEncoder:
+    model = TextCrossEncoder(model_name=model_name)
+    return model
 
 def benchmark_fastembed(
-    entries: list[dict], model_name: str
+    entries: list[dict], model: TextCrossEncoder
 ) -> tuple[list[float], list[int]]:
-    model = TextCrossEncoder(model_name=model_name)
-
     durations = []
     doc_counts = []
     for entry in tqdm(entries):
@@ -159,14 +167,24 @@ def benchmark_fastembed(
 
 
 def main() -> None:
+    if args.load_only:
+        if args.st_model:
+            load_st_model(args.st_model)
+        else:
+            load_fastembed_model(args.fastembed_model)
+        return
+
     entries = load_entries(args.data)
 
-    print(f"sentence-transformers ({args.st_model}, onnx backend)")
-    print_report(*benchmark_sentence_transformers(entries, args.st_model))
-    print()
+    if args.st_model:
+        print(f"sentence-transformers ({args.st_model}, onnx backend)")
+        model = load_st_model(args.st_model)
+        print_report(*benchmark_sentence_transformers(entries, model))
+        print()
 
     print(f"fastembed ({args.fastembed_model})")
-    print_report(*benchmark_fastembed(entries, args.fastembed_model))
+    model = load_fastembed_model(args.fastembed_model)
+    print_report(*benchmark_fastembed(entries, model))
 
 
 if __name__ == "__main__":
