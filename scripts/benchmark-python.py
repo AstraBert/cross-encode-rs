@@ -17,11 +17,13 @@ import gzip
 import json
 import time
 from dataclasses import dataclass
-from typing import Generic, TypeVar
+from typing import Generic, TypeVar, TYPE_CHECKING
 
-from fastembed.rerank.cross_encoder import TextCrossEncoder
-from sentence_transformers import CrossEncoder
 from tqdm import tqdm
+
+if TYPE_CHECKING:
+    from fastembed.rerank.cross_encoder import TextCrossEncoder
+    from sentence_transformers import CrossEncoder
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -129,12 +131,14 @@ def print_report(entry_durations: list[float], doc_counts: list[int]) -> None:
     print(f"\nPer-document latency ({len(per_doc_durations)} entries)")
     print(format_duration_stats(Stats.from_values(per_doc_durations)))
 
-def load_st_model(model_name: str) -> CrossEncoder:
+def load_st_model(model_name: str) -> "CrossEncoder":
+    from sentence_transformers import CrossEncoder
+
     model = CrossEncoder(model_name, num_labels=1, backend="onnx")
     return model
 
 def benchmark_sentence_transformers(
-    entries: list[dict], model: CrossEncoder
+    entries: list[dict], model: "CrossEncoder"
 ) -> tuple[list[float], list[int]]:
     durations = []
     doc_counts = []
@@ -147,12 +151,14 @@ def benchmark_sentence_transformers(
 
     return durations, doc_counts
 
-def load_fastembed_model(model_name: str) -> TextCrossEncoder:
+def load_fastembed_model(model_name: str) -> "TextCrossEncoder":
+    from fastembed.rerank.cross_encoder import TextCrossEncoder
+    
     model = TextCrossEncoder(model_name=model_name)
     return model
 
 def benchmark_fastembed(
-    entries: list[dict], model: TextCrossEncoder
+    entries: list[dict], model: "TextCrossEncoder"
 ) -> tuple[list[float], list[int]]:
     durations = []
     doc_counts = []
