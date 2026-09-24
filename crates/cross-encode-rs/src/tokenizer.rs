@@ -3,7 +3,9 @@
 use std::path::PathBuf;
 
 use tokenizers::{
-    PaddingParams, PaddingStrategy, TruncationParams, from_json_file,
+    PaddingParams, PaddingStrategy, TruncationParams,
+    convert::canonicalize_file,
+    from_json, from_json_file,
     pipeline::{EncodeHandle, EncodeOptions, Encoding, PipelineTokenizer},
 };
 
@@ -20,7 +22,23 @@ pub fn load_tokenizer(
 ) -> Result<(PipelineTokenizer, PaddingParams, TruncationParams), CrossEncoderError> {
     let p = path.into();
 
-    let tokenizer = from_json_file(&p)?;
+    let res = from_json_file(&p);
+
+    let tokenizer = match res {
+        Ok(t) => t,
+        Err(e) => {
+            if e.to_string()
+                .contains("tokenizer version '1.0' is not `2.0`")
+            {
+                let converted = canonicalize_file(&p)?;
+
+                from_json(&converted)?
+            } else {
+                return Err(e.into());
+            }
+        }
+    };
+
     let padding_params = tokenizer
         .get_padding()
         .unwrap_or(&PaddingParams {

@@ -10,6 +10,7 @@ pub enum CrossEncoderError {
     HuggingFaceLoadError(String),
     IOError(String),
     TokenizerError(String),
+    TokenizerConversionError(String),
     InferenceError(String),
     OnnxLoadingError(String),
     GenericFailure(String),
@@ -36,6 +37,9 @@ impl Display for CrossEncoderError {
             Self::GenericFailure(s) => {
                 write!(f, "{}", s)
             }
+            Self::TokenizerConversionError(s) => {
+                write!(f, "Error while converting v1 tokenizer to v2: {}", s)
+            }
         }
     }
 }
@@ -45,6 +49,12 @@ impl Error for CrossEncoderError {}
 impl From<&str> for CrossEncoderError {
     fn from(value: &str) -> Self {
         Self::GenericFailure(value.to_string())
+    }
+}
+
+impl From<tokenizers::convert::ConvertError> for CrossEncoderError {
+    fn from(value: tokenizers::convert::ConvertError) -> Self {
+        Self::TokenizerConversionError(value.to_string())
     }
 }
 

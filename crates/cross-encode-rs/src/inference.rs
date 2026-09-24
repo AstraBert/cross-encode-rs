@@ -17,13 +17,21 @@ pub fn run_inference(
         .iter()
         .flat_map(|e| e.ids().iter().map(|i| i.id() as i64))
         .collect();
+    // tokenizers v1 returns `None` for an all-ones attention mask (unpadded
+    // encoding) and for all-zero type ids, so expand those to full length.
     let mask: Vec<i64> = encodings
         .iter()
-        .flat_map(|e| e.attention_mask().unwrap_or(&[]).iter().map(|&b| b as i64))
+        .flat_map(|e| match e.attention_mask() {
+            Some(m) => m.iter().map(|&b| b as i64).collect::<Vec<_>>(),
+            None => vec![1; e.len()],
+        })
         .collect();
     let type_ids: Vec<i64> = encodings
         .iter()
-        .flat_map(|e| e.type_ids().unwrap_or(&[]).iter().map(|&b| b as i64))
+        .flat_map(|e| match e.type_ids() {
+            Some(t) => t.iter().map(|&b| b as i64).collect::<Vec<_>>(),
+            None => vec![0; e.len()],
+        })
         .collect();
 
     // Convert our flattened arrays into 2-dimensional tensors of shape [N, L].
