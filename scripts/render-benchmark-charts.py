@@ -186,10 +186,12 @@ def grouped_bar_chart(
     value_fmt,
     x_title: str,
     y_title: str,
+    labels: dict[str, list[str]] | None = None,
     width: int = 960,
 ) -> str:
     """One SVG with `len(group_labels)` groups, `len(series_names)` bars each.
-    `values[series][i]` is that series' value for group i.
+    `values[series][i]` is that series' value for group i; `labels[series][i]`,
+    when given, replaces `value_fmt(v)` as the printed value.
     """
     bar_h = 24
     bar_gap = 4
@@ -197,7 +199,7 @@ def grouped_bar_chart(
     n_series = len(series_names)
     group_h = n_series * bar_h + (n_series - 1) * bar_gap
     top_pad = 4
-    left_pad = 64
+    left_pad = max(64, round(max(len(g) for g in group_labels) * MONO_CHAR_W + 24))
     right_pad = 110
     axis_area = 76  # tick labels + x-axis title
     y_title_room = 40  # widened viewBox on the left for the rotated title
@@ -214,8 +216,7 @@ def grouped_bar_chart(
         return left_pad + (v / axis_max) * plot_w
 
     parts = [
-        f'<svg viewBox="{-y_title_room} 0 {width + y_title_room} {height}" role="img" '
-        f'aria-label="{x_title} by {y_title}" font-family=\'{FONT_STACK}\'>'
+        f'<svg viewBox="{-y_title_room} 0 {width + y_title_room} {height}" role="img" aria-label="{x_title} by {y_title}" font-family=\'{FONT_STACK}\'>'
     ]
 
     for t in ticks:
@@ -250,7 +251,7 @@ def grouped_bar_chart(
             bar_y = y + si * (bar_h + bar_gap)
             bar_w = max(x_of(v) - left_pad, 1.0)
             label_x = left_pad + bar_w + 8
-            text = value_fmt(v)
+            text = labels[series][gi] if labels else value_fmt(v)
             assert label_x + len(text) * MONO_CHAR_W <= width, (
                 f"value label {text!r} overflows the chart"
             )
@@ -273,11 +274,15 @@ def results_table(
     values: dict[str, list[float]],
     value_fmt,
     row_header: str,
+    labels: dict[str, list[str]] | None = None,
 ) -> str:
     head = "".join(f"<th>{s}</th>" for s in series_names)
     rows = []
     for gi, label in enumerate(group_labels):
-        cells = "".join(f"<td>{value_fmt(values[s][gi])}</td>" for s in series_names)
+        cells = "".join(
+            f"<td>{labels[s][gi] if labels else value_fmt(values[s][gi])}</td>"
+            for s in series_names
+        )
         rows.append(f"<tr><td>{label}</td>{cells}</tr>")
     return f"""<table>
   <caption>Exact figures</caption>
@@ -293,10 +298,11 @@ def chart_body(
     value_fmt,
     x_title: str,
     y_title: str,
+    labels: dict[str, list[str]] | None = None,
 ) -> str:
     """Legend + SVG, shared by the report pages and the standalone blog files."""
     svg = grouped_bar_chart(
-        group_labels, series_names, values, value_fmt, x_title, y_title
+        group_labels, series_names, values, value_fmt, x_title, y_title, labels
     )
     return f"{legend_html(series_names)}\n{svg}"
 
@@ -310,11 +316,14 @@ def chart_section(
     row_header: str,
     x_title: str,
     note: str = "",
+    labels: dict[str, list[str]] | None = None,
 ) -> str:
     chart = chart_body(
-        group_labels, series_names, values, value_fmt, x_title, row_header
+        group_labels, series_names, values, value_fmt, x_title, row_header, labels
     )
-    table = results_table(group_labels, series_names, values, value_fmt, row_header)
+    table = results_table(
+        group_labels, series_names, values, value_fmt, row_header, labels
+    )
     note_html = f'<p class="note">{note}</p>' if note else ""
     return f"""  <section class="chart">
     <h2>{title}</h2>
@@ -377,6 +386,34 @@ def parse_benchmark_file(path: Path) -> dict[str, dict[str, float]]:
             else:
                 sections[current][key] = parse_duration_ms(raw)
     return sections
+
+
+# results/load-time-<dir>.json, written by scripts/model-load-time-bench.sh
+LOAD_TIME_ORDER = ["xenova", "jina"]  # small model first
+LOAD_TIME_SHORT_LABELS = {
+    "xenova": "MiniLM-L-6-v2",
+    "jina": "jina-reranker-v2",
+}
+
+
+def load_time_series(command: str) -> str:
+    if command.startswith("./target/release/benchmarks"):
+        return "cross-encode-rs"
+    if "--st-model" in command:
+        return "sentence-transformers"
+    return "fastembed"
+
+
+def parse_load_time_file(path: Path) -> dict[str, tuple[float, float]]:
+    """Returns {series: (mean_ms, stddev_ms)} from a hyperfine JSON export.
+    hyperfine's memory_usage_byte is left out on purpose: it is the peak RSS
+    across all of hyperfine's children so far, not per command."""
+    import json
+
+    out = {}
+    for r in json.loads(path.read_text())["results"]:
+        out[load_time_series(r["command"])] = (r["mean"] * 1e3, r["stddev"] * 1e3)
+    return out
 
 
 def human_join(items: list[str]) -> str:
@@ -450,6 +487,46 @@ def render_benchmarks_page() -> None:
                     PERCENTILES, series_names, values, fmt, x_title, "percentile"
                 ),
             )
+
+    # model load time (process start to model ready), one group per model
+    load_times = {
+        m: parse_load_time_file(results_dir / f"load-time-{m}.json")
+        for m in LOAD_TIME_ORDER
+        if (results_dir / f"load-time-{m}.json").exists()
+    }
+    if load_times:
+        lt_series = [
+            s
+            for s in ("cross-encode-rs", "fastembed", "sentence-transformers")
+            if all(s in lt for lt in load_times.values())
+        ]
+        lt_groups = [LOAD_TIME_SHORT_LABELS.get(m, m) for m in load_times]
+        lt_values = {s: [lt[s][0] for lt in load_times.values()] for s in lt_series}
+        lt_labels = {
+            s: [f"{lt[s][0]:.0f} ± {lt[s][1]:.0f} ms" for lt in load_times.values()]
+            for s in lt_series
+        }
+        lt_x_title = "model load time, ms (mean ± stddev, lower is better)"
+        lt_fmt = lambda v: f"{v:.0f} ms"
+        body += chart_section(
+            "Model load time (ms, lower is better)",
+            lt_groups,
+            lt_series,
+            lt_values,
+            lt_fmt,
+            "model",
+            lt_x_title,
+            "Wall-clock time of a process that loads the model and exits, measured with "
+            "hyperfine (10 warmup runs, 40 measured runs). For Python this includes "
+            "interpreter startup and imports.",
+            lt_labels,
+        )
+        blog_charts["load-time.html"] = standalone_chart_page(
+            "Model load time",
+            chart_body(
+                lt_groups, lt_series, lt_values, lt_fmt, lt_x_title, "model", lt_labels
+            ),
+        )
 
     library_desc = {
         "cross-encode-rs": "cross-encode-rs (Rust/ONNX)",
