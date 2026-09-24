@@ -1,4 +1,5 @@
 use std::{
+    env,
     error::Error,
     fmt::Display,
     fs::File,
@@ -13,14 +14,15 @@ use indicatif::ProgressBar;
 use serde::{Deserialize, Serialize};
 
 const DATA_PATH: &str = "data/data.jsonl.gz";
-const MODEL_PATH: &str = "xenova/model.onnx";
-const TOKENIZER_PATH: &str = "xenova/tokenizer.json";
+const MODEL_BASE_NAME: &str = "model.onnx";
+const TOKENIZER_BASE_NAME: &str = "tokenizer.json";
 
 #[derive(Debug)]
 enum BenchmarkError {
     Serde(String),
     IO(String),
     CrossEncoder(String),
+    CliArgs(String),
 }
 
 impl Display for BenchmarkError {
@@ -29,6 +31,7 @@ impl Display for BenchmarkError {
             Self::Serde(s) => write!(f, "SerDe error: {}", s),
             Self::IO(s) => write!(f, "IO error: {}", s),
             Self::CrossEncoder(s) => write!(f, "CrossEncoder error: {}", s),
+            Self::CliArgs(s) => write!(f, "Incorrect CLI input: {}", s),
         }
     }
 }
@@ -50,6 +53,12 @@ impl From<std::io::Error> for BenchmarkError {
 impl From<CrossEncoderError> for BenchmarkError {
     fn from(value: CrossEncoderError) -> Self {
         Self::CrossEncoder(value.to_string())
+    }
+}
+
+impl From<&str> for BenchmarkError {
+    fn from(value: &str) -> Self {
+        Self::CliArgs(value.to_owned())
     }
 }
 
@@ -153,12 +162,27 @@ fn print_report(
 }
 
 fn main() -> Result<(), BenchmarkError> {
+    let args: Vec<String> = env::args().collect();
+
+    if args.len() != 2 {
+        return Err("This commands accept exactly one positional argument: MODEL_DIRECTORY".into());
+    }
+
+    let model_dir = PathBuf::from(&args[1]);
+
+    if !model_dir.exists() {
+        return Err("The provided MODEL_DIRECTORY does not exist".into());
+    }
+
     let mut cross_encoder = CrossEncoder::new(
-        PathBuf::from(TOKENIZER_PATH),
-        PathBuf::from(MODEL_PATH),
+        model_dir.join(TOKENIZER_BASE_NAME),
+        model_dir.join(MODEL_BASE_NAME),
         None,
         None,
     );
+
+    cross_encoder.initialize()?;
+
     let entries = jsonl_content_to_data(&read_gz_to_string(DATA_PATH)?)?;
 
     let mut entry_durations = Vec::with_capacity(entries.len());
