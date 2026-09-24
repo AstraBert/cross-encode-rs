@@ -8,3 +8,8 @@ xenova/
 model.onnx
 tokenizer.json
 deploy/k8s-priv/
+jina/
+.claude/skills/
+!crates/benchmarks/results/jina/
+!crates/benchmarks/results/xenova/
+pages/blog/

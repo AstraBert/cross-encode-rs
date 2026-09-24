@@ -1,36 +1,51 @@
 use ndarray::Ix2;
 use ort::{session::Session, value::TensorRef};
-use tokenizers::Encoding;
+use tokenizers::pipeline::Encoding;
 
 use crate::errors::CrossEncoderError;
 
 /// Runs the ONNX model over a batch of encodings and returns relevance
 /// scores in `[0, 1]` (sigmoid for a single-label head, softmax for two).
+/// All encodings must already be padded to the same length.
 pub fn run_inference(
     session: &mut Session,
-    encodings: Vec<Encoding>,
-    k: usize,
+    encodings: &[Encoding],
+    use_type_ids: bool,
 ) -> Result<Vec<f32>, CrossEncoderError> {
+    let k = encodings.len();
     let padding_dim = encodings[0].len();
     let ids: Vec<i64> = encodings
         .iter()
-        .flat_map(|e| e.get_ids().iter().map(|i| *i as i64))
+        .flat_map(|e| e.ids().iter().map(|i| i.id() as i64))
         .collect();
+    // tokenizers v1 returns `None` for an all-ones attention mask (unpadded
+    // encoding) and for all-zero type ids, so expand those to full length.
     let mask: Vec<i64> = encodings
         .iter()
-        .flat_map(|e| e.get_attention_mask().iter().map(|i| *i as i64))
+        .flat_map(|e| match e.attention_mask() {
+            Some(m) => m.iter().map(|&b| b as i64).collect::<Vec<_>>(),
+            None => vec![1; e.len()],
+        })
         .collect();
     let type_ids: Vec<i64> = encodings
         .iter()
-        .flat_map(|e| e.get_type_ids().iter().map(|i| *i as i64))
+        .flat_map(|e| match e.type_ids() {
+            Some(t) => t.iter().map(|&b| b as i64).collect::<Vec<_>>(),
+            None => vec![0; e.len()],
+        })
         .collect();
 
     // Convert our flattened arrays into 2-dimensional tensors of shape [N, L].
     let a_ids = TensorRef::from_array_view(([k, padding_dim], &*ids))?;
     let a_mask = TensorRef::from_array_view(([k, padding_dim], &*mask))?;
-    let a_type_ids = TensorRef::from_array_view(([k, padding_dim], &*type_ids))?;
 
-    let outputs = session.run(ort::inputs![a_ids, a_mask, a_type_ids])?;
+    let outputs = if use_type_ids {
+        let a_type_ids = TensorRef::from_array_view(([k, padding_dim], &*type_ids))?;
+
+        session.run(ort::inputs![a_ids, a_mask, a_type_ids])?
+    } else {
+        session.run(ort::inputs![a_ids, a_mask])?
+    };
 
     let logits = outputs[0]
         .try_extract_array::<f32>()?
@@ -65,6 +80,8 @@ pub fn run_inference(
 mod tests {
     use ort::session::{Session, builder::GraphOptimizationLevel};
 
+    use tokenizers::pad_encodings;
+
     use crate::tokenizer::{encode_batch, load_tokenizer};
 
     use super::*;
@@ -80,19 +97,21 @@ mod tests {
 
     #[test]
     fn run_inference_returns_one_score_per_document() {
-        let tokenizer =
+        let (tokenizer, padding_params, truncation_params) =
             load_tokenizer("testfiles/tokenizer.json", None).expect("tokenizer should load");
         let documents = [
             "rust is a language",
             "paris is in france",
             "another document",
         ];
-        let encodings =
-            encode_batch(&tokenizer, "what is rust", &documents).expect("encoding should succeed");
+        let mut encodings =
+            encode_batch(&tokenizer, &truncation_params, "what is rust", &documents)
+                .expect("encoding should succeed");
+        pad_encodings(&mut encodings, &padding_params).expect("padding should succeed");
         let mut session = test_session();
 
-        let scores = run_inference(&mut session, encodings, documents.len())
-            .expect("inference should succeed");
+        let scores =
+            run_inference(&mut session, &encodings, true).expect("inference should succeed");
 
         assert_eq!(scores.len(), documents.len());
         for score in scores {
@@ -102,18 +121,19 @@ mod tests {
 
     #[test]
     fn run_inference_ranks_relevant_document_higher() {
-        let tokenizer =
+        let (tokenizer, padding, truncation) =
             load_tokenizer("testfiles/tokenizer.json", None).expect("tokenizer should load");
         let documents = [
             "rust is a systems programming language",
             "paris is in france",
         ];
-        let encodings =
-            encode_batch(&tokenizer, "what is rust", &documents).expect("encoding should succeed");
+        let mut encodings = encode_batch(&tokenizer, &truncation, "what is rust", &documents)
+            .expect("encoding should succeed");
+        pad_encodings(&mut encodings, &padding).expect("padding should succeed");
         let mut session = test_session();
 
-        let scores = run_inference(&mut session, encodings, documents.len())
-            .expect("inference should succeed");
+        let scores =
+            run_inference(&mut session, &encodings, true).expect("inference should succeed");
 
         assert!(scores[0] > scores[1]);
     }

@@ -1,7 +1,10 @@
 use std::path::PathBuf;
 
 use ort::session::{Session, builder::GraphOptimizationLevel};
-use tokenizers::Tokenizer;
+use tokenizers::{
+    PaddingParams, TruncationParams, pad_encodings,
+    pipeline::{Encoding, PipelineTokenizer},
+};
 
 use crate::{
     inference::run_inference,
@@ -19,16 +22,20 @@ pub mod tokenizer;
 
 pub use errors::CrossEncoderError;
 
+pub const DEFAULT_BATCH_SIZE: usize = 16;
+
 /// Scores documents against a query with an ONNX cross-encoder. Model and
 /// tokenizer are lazily loaded on first use.
-#[derive(Debug)]
 pub struct CrossEncoder {
     pub tokenizer_path: PathBuf,
     pub model_path: PathBuf,
     pub intra_threads: Option<usize>,
     pub fallback_tokenizer_max_length: Option<usize>,
+    pub use_type_ids: bool,
     model: Option<Session>,
-    tokenizer: Option<Tokenizer>,
+    tokenizer: Option<PipelineTokenizer>,
+    truncation: Option<TruncationParams>,
+    padding: Option<PaddingParams>,
 }
 
 /// A single document's rerank outcome: its original index, relevance score
@@ -49,19 +56,27 @@ fn default_threads() -> usize {
 impl CrossEncoder {
     /// Builds a `CrossEncoder` for local model/tokenizer files. Nothing is
     /// loaded yet; use [`CrossEncoder::initialize`] or call [`CrossEncoder::rerank`] directly.
+    ///
+    /// Set `use_type_ids` to true if the cross-encoder is BERT-based and requires
+    /// also token type IDs for inference, `false` if it's RoBERTa-based and
+    /// only requires token IDs and the attention mask.
     pub fn new(
         tokenizer_path: PathBuf,
         model_path: PathBuf,
         intra_threads: Option<usize>,
         fallback_tokenizer_max_length: Option<usize>,
+        use_type_ids: bool,
     ) -> Self {
         Self {
             model_path,
             tokenizer_path,
             intra_threads,
             fallback_tokenizer_max_length,
+            use_type_ids,
             tokenizer: None,
             model: None,
+            truncation: None,
+            padding: None,
         }
     }
 
@@ -73,6 +88,7 @@ impl CrossEncoder {
         force_download: bool,
         intra_threads: Option<usize>,
         fallback_tokenizer_max_length: Option<usize>,
+        use_type_ids: bool,
     ) -> Result<Self, CrossEncoderError> {
         let (model_path, tokenizer_path) = download_from_hub(model_id, force_download).await?;
 
@@ -81,8 +97,11 @@ impl CrossEncoder {
             tokenizer_path,
             intra_threads,
             fallback_tokenizer_max_length,
+            use_type_ids,
             model: None,
             tokenizer: None,
+            truncation: None,
+            padding: None,
         })
     }
 
@@ -104,10 +123,12 @@ impl CrossEncoder {
             return Ok(());
         }
 
-        self.tokenizer = Some(load_tokenizer(
-            &self.tokenizer_path,
-            self.fallback_tokenizer_max_length,
-        )?);
+        let (tok, pad, trn) =
+            load_tokenizer(&self.tokenizer_path, self.fallback_tokenizer_max_length)?;
+
+        self.tokenizer = Some(tok);
+        self.truncation = Some(trn);
+        self.padding = Some(pad);
         Ok(())
     }
 
@@ -120,33 +141,55 @@ impl CrossEncoder {
     }
 
     /// Scores each document against `query`, preserving input order.
+    ///
+    /// Documents are grouped by token length into batches of `batch_size`
+    /// (default [`DEFAULT_BATCH_SIZE`]), so each batch is only padded to its
+    /// own longest sequence rather than the longest in the whole request.
     pub fn rerank<'a>(
         &'a mut self,
         query: &str,
         documents: &[&'a str],
         with_documents: bool,
+        batch_size: Option<usize>,
     ) -> Result<Vec<RerankResult<'a>>, CrossEncoderError> {
+        if documents.is_empty() {
+            return Ok(vec![]);
+        }
         self.init_model()?;
         self.init_tokenizer()?;
         if let Some(ref tokenizer) = self.tokenizer
             && let Some(ref mut model) = self.model
+            && let Some(ref padding) = self.padding
+            && let Some(ref truncation) = self.truncation
         {
-            let encodings = encode_batch(tokenizer, query, documents)?;
-            let scores = run_inference(model, encodings, documents.len())?;
-            let mut results: Vec<RerankResult> = Vec::with_capacity(scores.len());
-            for (idx, score) in scores.iter().enumerate() {
-                results.push(RerankResult {
-                    index: idx,
-                    score: *score,
-                    document: {
-                        if with_documents {
-                            Some(documents[idx])
-                        } else {
-                            None
-                        }
-                    },
-                })
+            let batch_size = batch_size.unwrap_or(DEFAULT_BATCH_SIZE).max(1);
+            let encodings = encode_batch(tokenizer, truncation, query, documents)?;
+
+            // Sort (original index, encoding) pairs by token length, then split
+            // them so `order[i]` is the input position of `sorted[i]`.
+            let mut indexed: Vec<(usize, Encoding)> = encodings.into_iter().enumerate().collect();
+            indexed.sort_by_key(|(_, e)| e.len());
+            let (order, mut sorted): (Vec<usize>, Vec<Encoding>) = indexed.into_iter().unzip();
+
+            let mut scores = vec![0.0f32; documents.len()];
+            for (idxs, batch) in order.chunks(batch_size).zip(sorted.chunks_mut(batch_size)) {
+                pad_encodings(batch, padding)?;
+                let batch_scores = run_inference(model, batch, self.use_type_ids)?;
+                // Scatter each score back to its document's original position.
+                for (&idx, score) in idxs.iter().zip(batch_scores) {
+                    scores[idx] = score;
+                }
             }
+
+            let results = scores
+                .into_iter()
+                .enumerate()
+                .map(|(idx, score)| RerankResult {
+                    index: idx,
+                    score,
+                    document: with_documents.then(|| documents[idx]),
+                })
+                .collect();
             return Ok(results);
         }
         Err("Model and tokenizer where not correctly loaded".into())
@@ -168,6 +211,7 @@ mod tests {
             "testfiles/model.onnx".into(),
             None,
             None,
+            true,
         )
     }
 
@@ -179,7 +223,7 @@ mod tests {
             "paris is in france",
         ];
         let results = ce
-            .rerank("what is rust", &documents, true)
+            .rerank("what is rust", &documents, true, None)
             .expect("rerank should succeed");
 
         assert_eq!(results.len(), documents.len());
@@ -194,7 +238,7 @@ mod tests {
             "paris is in france",
         ];
         let results = ce
-            .rerank("what is rust", &documents, false)
+            .rerank("what is rust", &documents, false, None)
             .expect("rerank should succeed");
 
         assert!(results.iter().all(|r| r.document.is_none()));
@@ -208,7 +252,7 @@ mod tests {
             "paris is in france",
         ];
         let results = ce
-            .rerank("what is rust", &documents, true)
+            .rerank("what is rust", &documents, true, None)
             .expect("rerank should succeed");
 
         for (idx, result) in results.iter().enumerate() {
@@ -269,11 +313,49 @@ mod tests {
     }
 
     #[test]
+    fn rerank_batching_preserves_input_order() {
+        let mut ce = test_encoder();
+        // Lengths deliberately out of order so sorting reshuffles them.
+        let documents = [
+            "rust is a systems programming language focused on safety and speed",
+            "paris",
+            "the borrow checker enforces ownership rules at compile time in rust",
+            "a cat",
+            "cargo is the rust package manager",
+        ];
+        let single: Vec<f32> = ce
+            .rerank("what is rust", &documents, false, Some(documents.len()))
+            .expect("single-batch rerank should succeed")
+            .iter()
+            .map(|r| r.score)
+            .collect();
+        let batched = ce
+            .rerank("what is rust", &documents, true, Some(2))
+            .expect("batched rerank should succeed");
+
+        assert_eq!(batched.len(), documents.len());
+        for (idx, result) in batched.iter().enumerate() {
+            assert_eq!(result.index, idx);
+            assert_eq!(result.document, Some(documents[idx]));
+            assert!((result.score - single[idx]).abs() < 1e-4);
+        }
+    }
+
+    #[test]
+    fn rerank_empty_documents_returns_empty() {
+        let mut ce = test_encoder();
+        let results = ce
+            .rerank("what is rust", &[], false, None)
+            .expect("empty rerank should succeed");
+        assert!(results.is_empty());
+    }
+
+    #[test]
     fn rerank_reuses_loaded_model_and_tokenizer() {
         let mut ce = test_encoder();
-        ce.rerank("first query", &["a document"], false)
+        ce.rerank("first query", &["a document"], false, None)
             .expect("first rerank should succeed");
-        ce.rerank("second query", &["another document"], false)
+        ce.rerank("second query", &["another document"], false, None)
             .expect("second rerank should succeed");
     }
 
@@ -281,7 +363,7 @@ mod tests {
     fn rerank_scores_are_valid_probabilities() {
         let mut ce = test_encoder();
         let results = ce
-            .rerank("what is rust", &["rust is a language"], false)
+            .rerank("what is rust", &["rust is a language"], false, None)
             .expect("rerank should succeed");
 
         for result in results {
@@ -296,8 +378,9 @@ mod tests {
         // the model's 512-token position embedding table and ONNX Runtime
         // fails with a broadcast error instead of a document score.
         let long_document = "word ".repeat(3000);
+        let docs = [long_document.as_str()];
 
-        let result = ce.rerank("what is rust", &[long_document.as_str()], false);
+        let result = ce.rerank("what is rust", &docs, false, None);
 
         assert!(result.is_ok());
     }
@@ -309,8 +392,9 @@ mod tests {
             "testfiles/does-not-exist.onnx".into(),
             None,
             None,
+            true,
         );
-        let result = ce.rerank("query", &["doc"], false);
+        let result = ce.rerank("query", &["doc"], false, None);
         assert!(result.is_err());
     }
 
@@ -321,8 +405,9 @@ mod tests {
             "testfiles/model.onnx".into(),
             None,
             None,
+            true,
         );
-        let result = ce.rerank("query", &["doc"], false);
+        let result = ce.rerank("query", &["doc"], false, None);
         assert!(result.is_err());
     }
 }

@@ -3,9 +3,11 @@
 and writing them into a top-level `pages/` directory suitable for deploying
 to GitHub Pages:
 
-  crates/benchmarks/results/*.txt  -> pages/benchmarks/index.html
+  crates/benchmarks/results/*/*.txt -> pages/benchmarks/index.html
   load-test/results/**/*.txt       -> pages/load-test/index.html
   (plus pages/index.html linking both)
+  crates/benchmarks/results/*/*.txt -> pages/blog/<model>-<metric>.html
+                                       (one standalone chart per file, for screenshots)
 
 No JavaScript, no hover interactions: every bar carries its own numeric label,
 and a table with the exact figures sits under each chart. Stdlib only, run
@@ -18,18 +20,35 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
-# Categorical palette, slots 1/2/3 (blue/orange/aqua) from the dataviz skill's
-# validated reference palette — passes CVD + normal-vision separation for a
-# 3-series all-pairs comparison. Light theme surface, per the request.
+# Qdrant brand palette (qdrant-charting skill): Blue 50 / Teal 50 for the two
+# libraries the comparison is about, a neutral for the slower reference.
 SERIES_COLORS = {
-    "cross-encode-rs": "#2a78d6",
-    "fastembed": "#eb6834",
-    "sentence-transformers": "#1baf7a",
+    "cross-encode-rs": "#2F6FF0",  # Blue 50
+    "fastembed": "#038585",  # Teal 50
+    "sentence-transformers": "#717C99",  # N60
 }
-TEXT_PRIMARY = "#0b0b0b"
-TEXT_SECONDARY = "#52514e"
-SURFACE = "#fcfcfb"
-GRIDLINE = "#e4e2dc"
+TEXT_PRIMARY = "#28324D"  # N30
+TEXT_SECONDARY = "#576280"  # N50
+WASH = "#E1E5F0"  # N94, sampled from the reference illustrations' frame
+GRIDLINE = "#E1E5F0"  # N94
+AXIS = "#B4BACC"  # N80
+FONT_STACK = (
+    'ui-monospace, "JetBrains Mono", "SFMono-Regular", Consolas, '
+    '"Liberation Mono", Menlo, monospace'
+)
+
+CHART_CSS = f"""
+  .legend {{ display: flex; gap: 1.75rem; flex-wrap: wrap; margin: 0 0 1.25rem; font-size: 16px; }}
+  .legend span {{ display: inline-flex; align-items: center; gap: .5rem; color: {TEXT_PRIMARY}; }}
+  .swatch {{ width: 14px; height: 14px; border-radius: 2px; display: inline-block; }}
+  svg {{ display: block; width: 100%; height: auto; }}
+  .bar-label {{ font-size: 15px; fill: {TEXT_PRIMARY}; }}
+  .cat-label {{ font-size: 15px; fill: {TEXT_PRIMARY}; }}
+  .tick-label {{ font-size: 14px; fill: {TEXT_SECONDARY}; }}
+  .axis-title {{ font-size: 16px; fill: {TEXT_SECONDARY}; }}
+  .gridline {{ stroke: {GRIDLINE}; stroke-width: 1; }}
+  .axis {{ stroke: {AXIS}; stroke-width: 1; }}
+"""
 
 PAGE_CSS = f"""
   :root {{ color-scheme: light; }}
@@ -37,45 +56,53 @@ PAGE_CSS = f"""
   body {{
     margin: 0;
     padding: 2rem 1.25rem 4rem;
-    background: {SURFACE};
+    background: {WASH};
     color: {TEXT_PRIMARY};
-    font: 15px/1.5 -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+    font: 15px/1.5 {FONT_STACK};
   }}
-  main {{ max-width: 960px; margin: 0 auto; }}
-  h1 {{ font-size: 1.6rem; margin: 0 0 .25rem; }}
-  h2 {{ font-size: 1.15rem; margin: 2.5rem 0 .25rem; }}
+  main {{ max-width: 1040px; margin: 0 auto; }}
+  h1 {{ font-size: 1.6rem; font-weight: 400; margin: 0 0 .25rem; }}
+  h2 {{ font-size: 1.15rem; font-weight: 400; margin: 0 0 .75rem; }}
   .subtitle {{ color: {TEXT_SECONDARY}; margin: 0 0 2rem; }}
   .note {{ color: {TEXT_SECONDARY}; font-size: .9rem; margin: .25rem 0 1rem; }}
   section.chart {{
-    border: 1px solid {GRIDLINE};
-    border-radius: 8px;
-    padding: 1.25rem 1.5rem 1.5rem;
-    margin: 1rem 0 2rem;
+    padding: 2rem 2.25rem 2.25rem;
+    margin: 1.5rem 0 2rem;
     background: #fff;
   }}
-  .legend {{ display: flex; gap: 1.25rem; flex-wrap: wrap; margin: .25rem 0 1rem; font-size: .9rem; }}
-  .legend span {{ display: inline-flex; align-items: center; gap: .4rem; color: {TEXT_SECONDARY}; }}
-  .swatch {{ width: 10px; height: 10px; border-radius: 2px; display: inline-block; }}
-  svg {{ display: block; width: 100%; height: auto; }}
-  .bar-label {{ font-size: 12px; fill: {TEXT_PRIMARY}; }}
-  .cat-label {{ font-size: 12px; fill: {TEXT_SECONDARY}; }}
-  .gridline {{ stroke: {GRIDLINE}; stroke-width: 1; }}
+{CHART_CSS}
   table {{
     border-collapse: collapse;
     width: 100%;
-    margin-top: 1rem;
+    margin-top: 1.5rem;
     font-size: .85rem;
   }}
   caption {{ text-align: left; color: {TEXT_SECONDARY}; font-size: .8rem; margin-bottom: .4rem; }}
   th, td {{ text-align: right; padding: .3rem .6rem; border-bottom: 1px solid {GRIDLINE}; }}
   th:first-child, td:first-child {{ text-align: left; }}
-  th {{ color: {TEXT_SECONDARY}; font-weight: 600; }}
+  th {{ color: {TEXT_SECONDARY}; font-weight: 400; }}
   tbody tr:last-child td {{ border-bottom: none; }}
   footer {{ color: {TEXT_SECONDARY}; font-size: .8rem; margin-top: 3rem; }}
   .index-list {{ list-style: none; padding: 0; margin: 1.5rem 0; }}
-  .index-list li {{ padding: 1rem 0; border-bottom: 1px solid {GRIDLINE}; }}
-  .index-list a {{ font-size: 1.05rem; font-weight: 600; color: {TEXT_PRIMARY}; }}
-  a {{ color: #2a78d6; }}
+  .index-list li {{ padding: 1rem 0; border-bottom: 1px solid {AXIS}; }}
+  .index-list a {{ font-size: 1.05rem; color: {TEXT_PRIMARY}; }}
+  a {{ color: {SERIES_COLORS["cross-encode-rs"]}; }}
+"""
+
+# Standalone chart file for screenshotting into the blog: wash frame around a
+# white canvas, no title or caption (those live in the article prose).
+STANDALONE_CSS = f"""
+  :root {{ color-scheme: light; }}
+  * {{ box-sizing: border-box; }}
+  body {{
+    margin: 0;
+    padding: 40px;
+    background: {WASH};
+    color: {TEXT_PRIMARY};
+    font: 15px/1.5 {FONT_STACK};
+  }}
+  .canvas {{ max-width: 1040px; margin: 0 auto; padding: 40px 44px 36px; background: #fff; }}
+{CHART_CSS}
 """
 
 
@@ -107,6 +134,23 @@ def page_shell(
 """
 
 
+def standalone_chart_page(title: str, chart_html: str) -> str:
+    return f"""<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>{title}</title>
+<style>{STANDALONE_CSS}</style>
+</head>
+<body>
+<div class="canvas">
+{chart_html}
+</div>
+</body>
+</html>
+"""
+
+
 def legend_html(series_names: list[str]) -> str:
     items = "".join(
         f'<span><span class="swatch" style="background:{SERIES_COLORS[s]}"></span>{s}</span>'
@@ -115,67 +159,107 @@ def legend_html(series_names: list[str]) -> str:
     return f'<div class="legend">{items}</div>'
 
 
+def nice_ticks(max_val: float, target: int = 5) -> list[float]:
+    """0-based ticks at a 1/2/5 x 10^k step, the last one >= max_val."""
+    import math
+
+    raw = max_val / target
+    mag = 10 ** math.floor(math.log10(raw))
+    step = next(m * mag for m in (1, 2, 2.5, 5, 10) if m * mag >= raw)
+    n = math.ceil(max_val / step - 1e-9)
+    return [i * step for i in range(n + 1)]
+
+
+def fmt_tick(v: float) -> str:
+    return f"{v:g}"
+
+
+# rough advance width of a monospace glyph at the bar-label size, used to keep
+# printed values inside the viewBox
+MONO_CHAR_W = 0.6 * 15
+
+
 def grouped_bar_chart(
     group_labels: list[str],
     series_names: list[str],
     values: dict[str, list[float]],
     value_fmt,
-    width: int = 880,
+    x_title: str,
+    y_title: str,
+    width: int = 960,
 ) -> str:
     """One SVG with `len(group_labels)` groups, `len(series_names)` bars each.
     `values[series][i]` is that series' value for group i.
     """
-    bar_h = 18
-    bar_gap = 3
-    group_gap = 16
+    bar_h = 24
+    bar_gap = 4
+    group_gap = 24
     n_series = len(series_names)
     group_h = n_series * bar_h + (n_series - 1) * bar_gap
-    top_pad, bottom_pad = 8, 8
-    left_pad = 130
-    right_pad = 70
+    top_pad = 4
+    left_pad = 64
+    right_pad = 110
+    axis_area = 76  # tick labels + x-axis title
+    y_title_room = 40  # widened viewBox on the left for the rotated title
     plot_w = width - left_pad - right_pad
 
-    max_val = max(v for vs in values.values() for v in vs) or 1.0
+    ticks = nice_ticks(max(v for vs in values.values() for v in vs) or 1.0)
+    axis_max = ticks[-1]
 
-    height = (
-        top_pad
-        + len(group_labels) * group_h
-        + (len(group_labels) - 1) * group_gap
-        + bottom_pad
-    )
+    plot_h = len(group_labels) * group_h + (len(group_labels) - 1) * group_gap
+    plot_bottom = top_pad + plot_h + 12
+    height = plot_bottom + axis_area
 
     def x_of(v: float) -> float:
-        return left_pad + (v / max_val) * plot_w
+        return left_pad + (v / axis_max) * plot_w
 
     parts = [
-        f'<svg viewBox="0 0 {width} {height}" role="img" aria-label="grouped bar chart">'
+        f'<svg viewBox="{-y_title_room} 0 {width + y_title_room} {height}" role="img" '
+        f'aria-label="{x_title} by {y_title}" font-family=\'{FONT_STACK}\'>'
     ]
 
-    # gridlines at 0/25/50/75/100% of max
-    for frac in (0.0, 0.25, 0.5, 0.75, 1.0):
-        gx = left_pad + frac * plot_w
+    for t in ticks:
+        gx = x_of(t)
         parts.append(
-            f'<line class="gridline" x1="{gx:.1f}" y1="{top_pad}" x2="{gx:.1f}" y2="{height - bottom_pad}"/>'
+            f'<line class="gridline" x1="{gx:.1f}" y1="{top_pad}" x2="{gx:.1f}" y2="{plot_bottom}"/>'
         )
+        parts.append(
+            f'<text class="tick-label" x="{gx:.1f}" y="{plot_bottom + 22}" text-anchor="middle">{fmt_tick(t)}</text>'
+        )
+    parts.append(
+        f'<line class="axis" x1="{left_pad}" y1="{plot_bottom}" x2="{x_of(axis_max):.1f}" y2="{plot_bottom}"/>'
+    )
+    parts.append(
+        f'<text class="axis-title" x="{left_pad + plot_w / 2:.1f}" y="{plot_bottom + 60}" text-anchor="middle">{x_title}</text>'
+    )
+    y_mid = top_pad + plot_h / 2
+    y_title_x = -y_title_room + 18
+    parts.append(
+        f'<text class="axis-title" x="{y_title_x}" y="{y_mid:.1f}" text-anchor="middle" '
+        f'dominant-baseline="middle" transform="rotate(-90 {y_title_x} {y_mid:.1f})">{y_title}</text>'
+    )
 
     y = top_pad
     for gi, label in enumerate(group_labels):
         group_mid = y + group_h / 2
         parts.append(
-            f'<text class="cat-label" x="{left_pad - 10}" y="{group_mid + 4:.1f}" text-anchor="end">{label}</text>'
+            f'<text class="cat-label" x="{left_pad - 12}" y="{group_mid + 5:.1f}" text-anchor="end">{label}</text>'
         )
         for si, series in enumerate(series_names):
             v = values[series][gi]
             bar_y = y + si * (bar_h + bar_gap)
             bar_w = max(x_of(v) - left_pad, 1.0)
-            color = SERIES_COLORS[series]
-            parts.append(
-                f'<rect x="{left_pad}" y="{bar_y:.1f}" width="{bar_w:.1f}" height="{bar_h}" '
-                f'rx="4" fill="{color}"/>'
+            label_x = left_pad + bar_w + 8
+            text = value_fmt(v)
+            assert label_x + len(text) * MONO_CHAR_W <= width, (
+                f"value label {text!r} overflows the chart"
             )
             parts.append(
-                f'<text class="bar-label" x="{left_pad + bar_w + 8:.1f}" y="{bar_y + bar_h / 2 + 4:.1f}">'
-                f"{value_fmt(v)}</text>"
+                f'<rect x="{left_pad}" y="{bar_y:.1f}" width="{bar_w:.1f}" height="{bar_h}" '
+                f'fill="{SERIES_COLORS[series]}"/>'
+            )
+            parts.append(
+                f'<text class="bar-label" x="{label_x:.1f}" y="{bar_y + bar_h / 2 + 5:.1f}">{text}</text>'
             )
         y += group_h + group_gap
 
@@ -202,6 +286,21 @@ def results_table(
 </table>"""
 
 
+def chart_body(
+    group_labels: list[str],
+    series_names: list[str],
+    values: dict[str, list[float]],
+    value_fmt,
+    x_title: str,
+    y_title: str,
+) -> str:
+    """Legend + SVG, shared by the report pages and the standalone blog files."""
+    svg = grouped_bar_chart(
+        group_labels, series_names, values, value_fmt, x_title, y_title
+    )
+    return f"{legend_html(series_names)}\n{svg}"
+
+
 def chart_section(
     title: str,
     group_labels: list[str],
@@ -209,16 +308,18 @@ def chart_section(
     values: dict[str, list[float]],
     value_fmt,
     row_header: str,
+    x_title: str,
     note: str = "",
 ) -> str:
-    svg = grouped_bar_chart(group_labels, series_names, values, value_fmt)
+    chart = chart_body(
+        group_labels, series_names, values, value_fmt, x_title, row_header
+    )
     table = results_table(group_labels, series_names, values, value_fmt, row_header)
     note_html = f'<p class="note">{note}</p>' if note else ""
     return f"""  <section class="chart">
     <h2>{title}</h2>
     {note_html}
-    {legend_html(series_names)}
-    {svg}
+    {chart}
     {table}
   </section>
 """
@@ -232,6 +333,10 @@ BENCH_LABELS = {
     "cross-encode-rs.txt": "cross-encode-rs",
     "fastembed-py.txt": "fastembed",
     "sentence-transformers-py.txt": "sentence-transformers",
+}
+# results/<dir>/ -> model shown on the page; unknown dirs fall back to the dir name
+BENCH_MODEL_LABELS = {
+    "xenova": "Xenova/ms-marco-MiniLM-L-6-v2",
 }
 PERCENTILES = ["min", "p50", "p90", "p99", "max"]
 
@@ -274,45 +379,93 @@ def parse_benchmark_file(path: Path) -> dict[str, dict[str, float]]:
     return sections
 
 
+def human_join(items: list[str]) -> str:
+    if len(items) <= 2:
+        return " and ".join(items)
+    return ", ".join(items[:-1]) + ", and " + items[-1]
+
+
 def render_benchmarks_page() -> None:
     results_dir = REPO_ROOT / "crates" / "benchmarks" / "results"
-    files = {
-        BENCH_LABELS[p.name]: parse_benchmark_file(p)
-        for p in results_dir.glob("*.txt")
-        if p.name in BENCH_LABELS
-    }
-    if not files:
-        print(f"no benchmark .txt files found in {results_dir}, skipping")
+    # one subdirectory per model, e.g. results/xenova/*.txt, results/jina/*.txt
+    per_model: dict[str, dict[str, dict[str, dict[str, float]]]] = {}
+    for model_dir in sorted(p for p in results_dir.iterdir() if p.is_dir()):
+        files = {
+            BENCH_LABELS[p.name]: parse_benchmark_file(p)
+            for p in model_dir.glob("*.txt")
+            if p.name in BENCH_LABELS
+        }
+        if files:
+            per_model[model_dir.name] = files
+    if not per_model:
+        print(f"no benchmark .txt files found under {results_dir}/*/, skipping")
         return
 
-    series_names = [
-        s
-        for s in ("cross-encode-rs", "fastembed", "sentence-transformers")
-        if s in files
-    ]
-
+    all_series: set[str] = set()
+    blog_charts: dict[str, str] = {}
     body = ""
-    for section, title, fmt in [
-        (
-            "Per-request latency",
-            "Per-request latency (ms, lower is better)",
-            lambda v: f"{v:.2f} ms",
-        ),
-        (
-            "Per-document latency",
-            "Per-document latency (ms, lower is better)",
-            lambda v: f"{v:.3f} ms",
-        ),
-    ]:
-        values = {s: [files[s][section][p] for p in PERCENTILES] for s in series_names}
-        body += chart_section(
-            title, PERCENTILES, series_names, values, fmt, "percentile"
-        )
+    for model, files in per_model.items():
+        series_names = [
+            s
+            for s in ("cross-encode-rs", "fastembed", "sentence-transformers")
+            if s in files
+        ]
+        all_series.update(series_names)
+        model_label = BENCH_MODEL_LABELS.get(model, model)
+        for section, slug, title, x_title, fmt in [
+            (
+                "Per-request latency",
+                "per-request",
+                "Per-request latency (ms, lower is better)",
+                "per-request latency, ms (lower is better)",
+                lambda v: f"{v:.2f} ms",
+            ),
+            (
+                "Per-document latency",
+                "per-document",
+                "Per-document latency (ms, lower is better)",
+                "per-document latency, ms (lower is better)",
+                None,
+            ),
+        ]:
+            values = {
+                s: [files[s][section][p] for p in PERCENTILES] for s in series_names
+            }
+            if fmt is None:
+                # sub-millisecond charts need the third decimal, slower ones don't
+                decimals = 3 if max(v for vs in values.values() for v in vs) < 5 else 2
+                fmt = lambda v, d=decimals: f"{v:.{d}f} ms"
+            body += chart_section(
+                f"{model_label}: {title}",
+                PERCENTILES,
+                series_names,
+                values,
+                fmt,
+                "percentile",
+                x_title,
+            )
+            blog_charts[f"{model}-{slug}.html"] = standalone_chart_page(
+                f"{model_label}: {title}",
+                chart_body(
+                    PERCENTILES, series_names, values, fmt, x_title, "percentile"
+                ),
+            )
 
+    library_desc = {
+        "cross-encode-rs": "cross-encode-rs (Rust/ONNX)",
+        "fastembed": "fastembed",
+        "sentence-transformers": "sentence-transformers (ONNX backend)",
+    }
+    libraries = [
+        library_desc[s]
+        for s in ("cross-encode-rs", "fastembed", "sentence-transformers")
+        if s in all_series
+    ]
+    models = [BENCH_MODEL_LABELS.get(m, m) for m in per_model]
     html = page_shell(
         "cross-encode-rs benchmark results",
-        "Rerank latency across the cross-encode-rs (Rust/ONNX), fastembed, and sentence-transformers "
-        "(ONNX backend) libraries, run over the same dataset.",
+        f"Rerank latency across the {human_join(libraries)} libraries, run over the same "
+        f"dataset, for {human_join(models)}.",
         body,
     )
     out_dir = REPO_ROOT / "pages" / "benchmarks"
@@ -320,6 +473,13 @@ def render_benchmarks_page() -> None:
     out_path = out_dir / "index.html"
     out_path.write_text(html)
     print(f"wrote {out_path}")
+
+    # one self-contained file per chart, framed for screenshotting into the blog
+    blog_dir = REPO_ROOT / "pages" / "blog"
+    blog_dir.mkdir(parents=True, exist_ok=True)
+    for name, chart_html in blog_charts.items():
+        (blog_dir / name).write_text(chart_html)
+        print(f"wrote {blog_dir / name}")
 
 
 # ---------------------------------------------------------------------------
@@ -422,6 +582,7 @@ def render_load_test_page() -> None:
         averaged("avg_response_ms"),
         lambda v: f"{v:.0f} ms",
         "load",
+        "average response time, ms (lower is better)",
         note,
     )
     body += chart_section(
@@ -431,6 +592,7 @@ def render_load_test_page() -> None:
         averaged("requests_per_sec"),
         lambda v: f"{v:.1f} req/s",
         "load",
+        "throughput, requests/sec (higher is better)",
         note,
     )
 
