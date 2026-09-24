@@ -204,6 +204,7 @@ fn spawn_inference_worker(
                             .collect::<Vec<&str>>()
                             .as_slice(),
                         req.input.return_documents,
+                        None,
                     )
                     .map(|results| {
                         results

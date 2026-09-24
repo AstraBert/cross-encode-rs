@@ -3259,7 +3259,6 @@ dependencies = [
  "ahash",
  "bitcannon",
  "dary_heap",
- "hf-hub",
  "itertools 0.15.0",
  "libc",
  "log",

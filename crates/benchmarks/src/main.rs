@@ -196,7 +196,7 @@ fn main() -> Result<(), BenchmarkError> {
         let (query, documents) = entry.to_rerank_input();
 
         let start = Instant::now();
-        cross_encoder.rerank(query, &documents, false)?;
+        cross_encoder.rerank(query, &documents, false, None)?;
         let elapsed = start.elapsed();
 
         entry_durations.push(elapsed);

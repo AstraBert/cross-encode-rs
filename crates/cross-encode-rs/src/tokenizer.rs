@@ -57,10 +57,10 @@ pub fn load_tokenizer(
     Ok((tokenizer, padding_params, truncation_params))
 }
 
-/// Encodes each `(query, document)` pair for cross-encoder input.
+/// Encodes each `(query, document)` pair for cross-encoder input, truncated
+/// but unpadded: callers pad each inference batch with `pad_encodings`.
 pub fn encode_batch(
     tk: &PipelineTokenizer,
-    padding: &PaddingParams,
     truncation: &TruncationParams,
     query: &str,
     documents: &[&str],
@@ -74,7 +74,7 @@ pub fn encode_batch(
         &EncodeOptions {
             add_special_tokens: true,
             encode_special_tokens: true,
-            padding: tokenizers::pipeline::Override::With(padding.to_owned()),
+            padding: tokenizers::pipeline::Override::Off,
             truncation: tokenizers::pipeline::Override::With(truncation.to_owned()),
         },
     );
@@ -93,11 +93,11 @@ mod tests {
 
     #[test]
     fn encode_batch_truncates_to_default_max_length() {
-        let (tk, pd, tr) =
+        let (tk, _, tr) =
             load_tokenizer("testfiles/tokenizer.json", None).expect("tokenizer should load");
         let long_document = "word ".repeat(3000);
 
-        let encodings = encode_batch(&tk, &pd, &tr, "what is rust", &[long_document.as_str()])
+        let encodings = encode_batch(&tk, &tr, "what is rust", &[long_document.as_str()])
             .expect("should encode");
 
         assert_eq!(encodings[0].len(), DEFAULT_MAX_LENGTH);

@@ -62,7 +62,7 @@ fn rerank_scores_match_python_reference() {
         true,
     );
     let mut results = ce
-        .rerank(QUERY, DOCUMENTS, false)
+        .rerank(QUERY, DOCUMENTS, false, None)
         .expect("rerank should succeed");
     results.sort_by_key(|r| r.index);
 

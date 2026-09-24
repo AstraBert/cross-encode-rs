@@ -6,12 +6,13 @@ use crate::errors::CrossEncoderError;
 
 /// Runs the ONNX model over a batch of encodings and returns relevance
 /// scores in `[0, 1]` (sigmoid for a single-label head, softmax for two).
+/// All encodings must already be padded to the same length.
 pub fn run_inference(
     session: &mut Session,
-    encodings: Vec<Encoding>,
-    k: usize,
+    encodings: &[Encoding],
     use_type_ids: bool,
 ) -> Result<Vec<f32>, CrossEncoderError> {
+    let k = encodings.len();
     let padding_dim = encodings[0].len();
     let ids: Vec<i64> = encodings
         .iter()
@@ -79,6 +80,8 @@ pub fn run_inference(
 mod tests {
     use ort::session::{Session, builder::GraphOptimizationLevel};
 
+    use tokenizers::pad_encodings;
+
     use crate::tokenizer::{encode_batch, load_tokenizer};
 
     use super::*;
@@ -101,17 +104,17 @@ mod tests {
             "paris is in france",
             "another document",
         ];
-        let encodings = encode_batch(
+        let mut encodings = encode_batch(
             &tokenizer,
-            &padding_params,
             &truncation_params,
             "what is rust",
             &documents,
         )
         .expect("encoding should succeed");
+        pad_encodings(&mut encodings, &padding_params).expect("padding should succeed");
         let mut session = test_session();
 
-        let scores = run_inference(&mut session, encodings, documents.len(), true)
+        let scores = run_inference(&mut session, &encodings, true)
             .expect("inference should succeed");
 
         assert_eq!(scores.len(), documents.len());
@@ -128,17 +131,17 @@ mod tests {
             "rust is a systems programming language",
             "paris is in france",
         ];
-        let encodings = encode_batch(
+        let mut encodings = encode_batch(
             &tokenizer,
-            &padding,
             &truncation,
             "what is rust",
             &documents,
         )
         .expect("encoding should succeed");
+        pad_encodings(&mut encodings, &padding).expect("padding should succeed");
         let mut session = test_session();
 
-        let scores = run_inference(&mut session, encodings, documents.len(), true)
+        let scores = run_inference(&mut session, &encodings, true)
             .expect("inference should succeed");
 
         assert!(scores[0] > scores[1]);
