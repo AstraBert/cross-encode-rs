@@ -1,0 +1,20 @@
+Documents per entry (3978 entries)
+  min: 26
+  p50: 30
+  p90: 30
+  p99: 30
+  max: 60
+
+Per-request latency (3978 entries)
+  min: 94.43ms
+  p50: 188.53ms
+  p90: 249.93ms
+  p99: 340.43ms
+  max: 480.12ms
+
+Per-document latency (3978 entries)
+  min: 3.15ms
+  p50: 6.34ms
+  p90: 8.40ms
+  p99: 11.35ms
+  max: 16.00ms

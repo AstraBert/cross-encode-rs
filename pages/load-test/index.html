@@ -10,45 +10,48 @@
   body {
     margin: 0;
     padding: 2rem 1.25rem 4rem;
-    background: #fcfcfb;
-    color: #0b0b0b;
-    font: 15px/1.5 -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+    background: #E1E5F0;
+    color: #28324D;
+    font: 15px/1.5 ui-monospace, "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
   }
-  main { max-width: 960px; margin: 0 auto; }
-  h1 { font-size: 1.6rem; margin: 0 0 .25rem; }
-  h2 { font-size: 1.15rem; margin: 2.5rem 0 .25rem; }
-  .subtitle { color: #52514e; margin: 0 0 2rem; }
-  .note { color: #52514e; font-size: .9rem; margin: .25rem 0 1rem; }
+  main { max-width: 1040px; margin: 0 auto; }
+  h1 { font-size: 1.6rem; font-weight: 400; margin: 0 0 .25rem; }
+  h2 { font-size: 1.15rem; font-weight: 400; margin: 0 0 .75rem; }
+  .subtitle { color: #576280; margin: 0 0 2rem; }
+  .note { color: #576280; font-size: .9rem; margin: .25rem 0 1rem; }
   section.chart {
-    border: 1px solid #e4e2dc;
-    border-radius: 8px;
-    padding: 1.25rem 1.5rem 1.5rem;
-    margin: 1rem 0 2rem;
+    padding: 2rem 2.25rem 2.25rem;
+    margin: 1.5rem 0 2rem;
     background: #fff;
   }
-  .legend { display: flex; gap: 1.25rem; flex-wrap: wrap; margin: .25rem 0 1rem; font-size: .9rem; }
-  .legend span { display: inline-flex; align-items: center; gap: .4rem; color: #52514e; }
-  .swatch { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+
+  .legend { display: flex; gap: 1.75rem; flex-wrap: wrap; margin: 0 0 1.25rem; font-size: 16px; }
+  .legend span { display: inline-flex; align-items: center; gap: .5rem; color: #28324D; }
+  .swatch { width: 14px; height: 14px; border-radius: 2px; display: inline-block; }
   svg { display: block; width: 100%; height: auto; }
-  .bar-label { font-size: 12px; fill: #0b0b0b; }
-  .cat-label { font-size: 12px; fill: #52514e; }
-  .gridline { stroke: #e4e2dc; stroke-width: 1; }
+  .bar-label { font-size: 15px; fill: #28324D; }
+  .cat-label { font-size: 15px; fill: #28324D; }
+  .tick-label { font-size: 14px; fill: #576280; }
+  .axis-title { font-size: 16px; fill: #576280; }
+  .gridline { stroke: #E1E5F0; stroke-width: 1; }
+  .axis { stroke: #B4BACC; stroke-width: 1; }
+
   table {
     border-collapse: collapse;
     width: 100%;
-    margin-top: 1rem;
+    margin-top: 1.5rem;
     font-size: .85rem;
   }
-  caption { text-align: left; color: #52514e; font-size: .8rem; margin-bottom: .4rem; }
-  th, td { text-align: right; padding: .3rem .6rem; border-bottom: 1px solid #e4e2dc; }
+  caption { text-align: left; color: #576280; font-size: .8rem; margin-bottom: .4rem; }
+  th, td { text-align: right; padding: .3rem .6rem; border-bottom: 1px solid #E1E5F0; }
   th:first-child, td:first-child { text-align: left; }
-  th { color: #52514e; font-weight: 600; }
+  th { color: #576280; font-weight: 400; }
   tbody tr:last-child td { border-bottom: none; }
-  footer { color: #52514e; font-size: .8rem; margin-top: 3rem; }
+  footer { color: #576280; font-size: .8rem; margin-top: 3rem; }
   .index-list { list-style: none; padding: 0; margin: 1.5rem 0; }
-  .index-list li { padding: 1rem 0; border-bottom: 1px solid #e4e2dc; }
-  .index-list a { font-size: 1.05rem; font-weight: 600; color: #0b0b0b; }
-  a { color: #2a78d6; }
+  .index-list li { padding: 1rem 0; border-bottom: 1px solid #B4BACC; }
+  .index-list a { font-size: 1.05rem; color: #28324D; }
+  a { color: #2F6FF0; }
 </style>
 </head>
 <body>
@@ -59,27 +62,37 @@
   <section class="chart">
     <h2>Average response time (ms, lower is better)</h2>
     <p class="note">Averaged across cross-encode-rs: 4 run(s), fastembed: 4 run(s), sentence-transformers: 4 run(s) per request count.</p>
-    <div class="legend"><span><span class="swatch" style="background:#2a78d6"></span>cross-encode-rs</span><span><span class="swatch" style="background:#eb6834"></span>fastembed</span><span><span class="swatch" style="background:#1baf7a"></span>sentence-transformers</span></div>
-    <svg viewBox="0 0 880 152" role="img" aria-label="grouped bar chart">
-<line class="gridline" x1="130.0" y1="8" x2="130.0" y2="144"/>
-<line class="gridline" x1="300.0" y1="8" x2="300.0" y2="144"/>
-<line class="gridline" x1="470.0" y1="8" x2="470.0" y2="144"/>
-<line class="gridline" x1="640.0" y1="8" x2="640.0" y2="144"/>
-<line class="gridline" x1="810.0" y1="8" x2="810.0" y2="144"/>
-<text class="cat-label" x="120" y="42.0" text-anchor="end">1,000 requests</text>
-<rect x="130" y="8.0" width="228.5" height="18" rx="4" fill="#2a78d6"/>
-<text class="bar-label" x="366.5" y="21.0">2856 ms</text>
-<rect x="130" y="29.0" width="309.5" height="18" rx="4" fill="#eb6834"/>
-<text class="bar-label" x="447.5" y="42.0">3868 ms</text>
-<rect x="130" y="50.0" width="675.5" height="18" rx="4" fill="#1baf7a"/>
-<text class="bar-label" x="813.5" y="63.0">8440 ms</text>
-<text class="cat-label" x="120" y="118.0" text-anchor="end">10,000 requests</text>
-<rect x="130" y="84.0" width="257.1" height="18" rx="4" fill="#2a78d6"/>
-<text class="bar-label" x="395.1" y="97.0">3213 ms</text>
-<rect x="130" y="105.0" width="298.6" height="18" rx="4" fill="#eb6834"/>
-<text class="bar-label" x="436.6" y="118.0">3732 ms</text>
-<rect x="130" y="126.0" width="680.0" height="18" rx="4" fill="#1baf7a"/>
-<text class="bar-label" x="818.0" y="139.0">8497 ms</text>
+    <div class="legend"><span><span class="swatch" style="background:#2F6FF0"></span>cross-encode-rs</span><span><span class="swatch" style="background:#038585"></span>fastembed</span><span><span class="swatch" style="background:#717C99"></span>sentence-transformers</span></div>
+<svg viewBox="-40 0 1000 276" role="img" aria-label="average response time, ms (lower is better) by load" font-family='ui-monospace, "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace'>
+<line class="gridline" x1="64.0" y1="4" x2="64.0" y2="200"/>
+<text class="tick-label" x="64.0" y="222" text-anchor="middle">0</text>
+<line class="gridline" x1="221.2" y1="4" x2="221.2" y2="200"/>
+<text class="tick-label" x="221.2" y="222" text-anchor="middle">2000</text>
+<line class="gridline" x1="378.4" y1="4" x2="378.4" y2="200"/>
+<text class="tick-label" x="378.4" y="222" text-anchor="middle">4000</text>
+<line class="gridline" x1="535.6" y1="4" x2="535.6" y2="200"/>
+<text class="tick-label" x="535.6" y="222" text-anchor="middle">6000</text>
+<line class="gridline" x1="692.8" y1="4" x2="692.8" y2="200"/>
+<text class="tick-label" x="692.8" y="222" text-anchor="middle">8000</text>
+<line class="gridline" x1="850.0" y1="4" x2="850.0" y2="200"/>
+<text class="tick-label" x="850.0" y="222" text-anchor="middle">10000</text>
+<line class="axis" x1="64" y1="200" x2="850.0" y2="200"/>
+<text class="axis-title" x="457.0" y="260" text-anchor="middle">average response time, ms (lower is better)</text>
+<text class="axis-title" x="-22" y="96.0" text-anchor="middle" dominant-baseline="middle" transform="rotate(-90 -22 96.0)">load</text>
+<text class="cat-label" x="52" y="49.0" text-anchor="end">1,000 requests</text>
+<rect x="64" y="4.0" width="224.4" height="24" fill="#2F6FF0"/>
+<text class="bar-label" x="296.4" y="21.0">2856 ms</text>
+<rect x="64" y="32.0" width="304.0" height="24" fill="#038585"/>
+<text class="bar-label" x="376.0" y="49.0">3868 ms</text>
+<rect x="64" y="60.0" width="663.4" height="24" fill="#717C99"/>
+<text class="bar-label" x="735.4" y="77.0">8440 ms</text>
+<text class="cat-label" x="52" y="153.0" text-anchor="end">10,000 requests</text>
+<rect x="64" y="108.0" width="252.6" height="24" fill="#2F6FF0"/>
+<text class="bar-label" x="324.6" y="125.0">3213 ms</text>
+<rect x="64" y="136.0" width="293.3" height="24" fill="#038585"/>
+<text class="bar-label" x="365.3" y="153.0">3732 ms</text>
+<rect x="64" y="164.0" width="667.9" height="24" fill="#717C99"/>
+<text class="bar-label" x="739.9" y="181.0">8497 ms</text>
 </svg>
     <table>
   <caption>Exact figures</caption>
@@ -90,27 +103,33 @@
   <section class="chart">
     <h2>Throughput (requests/sec, higher is better)</h2>
     <p class="note">Averaged across cross-encode-rs: 4 run(s), fastembed: 4 run(s), sentence-transformers: 4 run(s) per request count.</p>
-    <div class="legend"><span><span class="swatch" style="background:#2a78d6"></span>cross-encode-rs</span><span><span class="swatch" style="background:#eb6834"></span>fastembed</span><span><span class="swatch" style="background:#1baf7a"></span>sentence-transformers</span></div>
-    <svg viewBox="0 0 880 152" role="img" aria-label="grouped bar chart">
-<line class="gridline" x1="130.0" y1="8" x2="130.0" y2="144"/>
-<line class="gridline" x1="300.0" y1="8" x2="300.0" y2="144"/>
-<line class="gridline" x1="470.0" y1="8" x2="470.0" y2="144"/>
-<line class="gridline" x1="640.0" y1="8" x2="640.0" y2="144"/>
-<line class="gridline" x1="810.0" y1="8" x2="810.0" y2="144"/>
-<text class="cat-label" x="120" y="42.0" text-anchor="end">1,000 requests</text>
-<rect x="130" y="8.0" width="523.1" height="18" rx="4" fill="#2a78d6"/>
-<text class="bar-label" x="661.1" y="21.0">226.6 req/s</text>
-<rect x="130" y="29.0" width="493.6" height="18" rx="4" fill="#eb6834"/>
-<text class="bar-label" x="631.6" y="42.0">213.8 req/s</text>
-<rect x="130" y="50.0" width="247.8" height="18" rx="4" fill="#1baf7a"/>
-<text class="bar-label" x="385.8" y="63.0">107.3 req/s</text>
-<text class="cat-label" x="120" y="118.0" text-anchor="end">10,000 requests</text>
-<rect x="130" y="84.0" width="680.0" height="18" rx="4" fill="#2a78d6"/>
-<text class="bar-label" x="818.0" y="97.0">294.5 req/s</text>
-<rect x="130" y="105.0" width="604.1" height="18" rx="4" fill="#eb6834"/>
-<text class="bar-label" x="742.1" y="118.0">261.6 req/s</text>
-<rect x="130" y="126.0" width="266.9" height="18" rx="4" fill="#1baf7a"/>
-<text class="bar-label" x="404.9" y="139.0">115.6 req/s</text>
+    <div class="legend"><span><span class="swatch" style="background:#2F6FF0"></span>cross-encode-rs</span><span><span class="swatch" style="background:#038585"></span>fastembed</span><span><span class="swatch" style="background:#717C99"></span>sentence-transformers</span></div>
+<svg viewBox="-40 0 1000 276" role="img" aria-label="throughput, requests/sec (higher is better) by load" font-family='ui-monospace, "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace'>
+<line class="gridline" x1="64.0" y1="4" x2="64.0" y2="200"/>
+<text class="tick-label" x="64.0" y="222" text-anchor="middle">0</text>
+<line class="gridline" x1="326.0" y1="4" x2="326.0" y2="200"/>
+<text class="tick-label" x="326.0" y="222" text-anchor="middle">100</text>
+<line class="gridline" x1="588.0" y1="4" x2="588.0" y2="200"/>
+<text class="tick-label" x="588.0" y="222" text-anchor="middle">200</text>
+<line class="gridline" x1="850.0" y1="4" x2="850.0" y2="200"/>
+<text class="tick-label" x="850.0" y="222" text-anchor="middle">300</text>
+<line class="axis" x1="64" y1="200" x2="850.0" y2="200"/>
+<text class="axis-title" x="457.0" y="260" text-anchor="middle">throughput, requests/sec (higher is better)</text>
+<text class="axis-title" x="-22" y="96.0" text-anchor="middle" dominant-baseline="middle" transform="rotate(-90 -22 96.0)">load</text>
+<text class="cat-label" x="52" y="49.0" text-anchor="end">1,000 requests</text>
+<rect x="64" y="4.0" width="593.6" height="24" fill="#2F6FF0"/>
+<text class="bar-label" x="665.6" y="21.0">226.6 req/s</text>
+<rect x="64" y="32.0" width="560.1" height="24" fill="#038585"/>
+<text class="bar-label" x="632.1" y="49.0">213.8 req/s</text>
+<rect x="64" y="60.0" width="281.2" height="24" fill="#717C99"/>
+<text class="bar-label" x="353.2" y="77.0">107.3 req/s</text>
+<text class="cat-label" x="52" y="153.0" text-anchor="end">10,000 requests</text>
+<rect x="64" y="108.0" width="771.7" height="24" fill="#2F6FF0"/>
+<text class="bar-label" x="843.7" y="125.0">294.5 req/s</text>
+<rect x="64" y="136.0" width="685.5" height="24" fill="#038585"/>
+<text class="bar-label" x="757.5" y="153.0">261.6 req/s</text>
+<rect x="64" y="164.0" width="302.9" height="24" fill="#717C99"/>
+<text class="bar-label" x="374.9" y="181.0">115.6 req/s</text>
 </svg>
     <table>
   <caption>Exact figures</caption>

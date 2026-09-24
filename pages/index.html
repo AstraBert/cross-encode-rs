@@ -10,45 +10,48 @@
   body {
     margin: 0;
     padding: 2rem 1.25rem 4rem;
-    background: #fcfcfb;
-    color: #0b0b0b;
-    font: 15px/1.5 -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+    background: #E1E5F0;
+    color: #28324D;
+    font: 15px/1.5 ui-monospace, "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
   }
-  main { max-width: 960px; margin: 0 auto; }
-  h1 { font-size: 1.6rem; margin: 0 0 .25rem; }
-  h2 { font-size: 1.15rem; margin: 2.5rem 0 .25rem; }
-  .subtitle { color: #52514e; margin: 0 0 2rem; }
-  .note { color: #52514e; font-size: .9rem; margin: .25rem 0 1rem; }
+  main { max-width: 1040px; margin: 0 auto; }
+  h1 { font-size: 1.6rem; font-weight: 400; margin: 0 0 .25rem; }
+  h2 { font-size: 1.15rem; font-weight: 400; margin: 0 0 .75rem; }
+  .subtitle { color: #576280; margin: 0 0 2rem; }
+  .note { color: #576280; font-size: .9rem; margin: .25rem 0 1rem; }
   section.chart {
-    border: 1px solid #e4e2dc;
-    border-radius: 8px;
-    padding: 1.25rem 1.5rem 1.5rem;
-    margin: 1rem 0 2rem;
+    padding: 2rem 2.25rem 2.25rem;
+    margin: 1.5rem 0 2rem;
     background: #fff;
   }
-  .legend { display: flex; gap: 1.25rem; flex-wrap: wrap; margin: .25rem 0 1rem; font-size: .9rem; }
-  .legend span { display: inline-flex; align-items: center; gap: .4rem; color: #52514e; }
-  .swatch { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+
+  .legend { display: flex; gap: 1.75rem; flex-wrap: wrap; margin: 0 0 1.25rem; font-size: 16px; }
+  .legend span { display: inline-flex; align-items: center; gap: .5rem; color: #28324D; }
+  .swatch { width: 14px; height: 14px; border-radius: 2px; display: inline-block; }
   svg { display: block; width: 100%; height: auto; }
-  .bar-label { font-size: 12px; fill: #0b0b0b; }
-  .cat-label { font-size: 12px; fill: #52514e; }
-  .gridline { stroke: #e4e2dc; stroke-width: 1; }
+  .bar-label { font-size: 15px; fill: #28324D; }
+  .cat-label { font-size: 15px; fill: #28324D; }
+  .tick-label { font-size: 14px; fill: #576280; }
+  .axis-title { font-size: 16px; fill: #576280; }
+  .gridline { stroke: #E1E5F0; stroke-width: 1; }
+  .axis { stroke: #B4BACC; stroke-width: 1; }
+
   table {
     border-collapse: collapse;
     width: 100%;
-    margin-top: 1rem;
+    margin-top: 1.5rem;
     font-size: .85rem;
   }
-  caption { text-align: left; color: #52514e; font-size: .8rem; margin-bottom: .4rem; }
-  th, td { text-align: right; padding: .3rem .6rem; border-bottom: 1px solid #e4e2dc; }
+  caption { text-align: left; color: #576280; font-size: .8rem; margin-bottom: .4rem; }
+  th, td { text-align: right; padding: .3rem .6rem; border-bottom: 1px solid #E1E5F0; }
   th:first-child, td:first-child { text-align: left; }
-  th { color: #52514e; font-weight: 600; }
+  th { color: #576280; font-weight: 400; }
   tbody tr:last-child td { border-bottom: none; }
-  footer { color: #52514e; font-size: .8rem; margin-top: 3rem; }
+  footer { color: #576280; font-size: .8rem; margin-top: 3rem; }
   .index-list { list-style: none; padding: 0; margin: 1.5rem 0; }
-  .index-list li { padding: 1rem 0; border-bottom: 1px solid #e4e2dc; }
-  .index-list a { font-size: 1.05rem; font-weight: 600; color: #0b0b0b; }
-  a { color: #2a78d6; }
+  .index-list li { padding: 1rem 0; border-bottom: 1px solid #B4BACC; }
+  .index-list a { font-size: 1.05rem; color: #28324D; }
+  a { color: #2F6FF0; }
 </style>
 </head>
 <body>
