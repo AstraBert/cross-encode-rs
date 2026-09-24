@@ -9,3 +9,4 @@ model.onnx
 tokenizer.json
 deploy/k8s-priv/
 jina/
+.claude/skills/

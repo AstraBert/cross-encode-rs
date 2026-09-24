@@ -1,6 +1,6 @@
 use ndarray::Ix2;
 use ort::{session::Session, value::TensorRef};
-use tokenizers::Encoding;
+use tokenizers::pipeline::Encoding;
 
 use crate::errors::CrossEncoderError;
 
@@ -15,15 +15,15 @@ pub fn run_inference(
     let padding_dim = encodings[0].len();
     let ids: Vec<i64> = encodings
         .iter()
-        .flat_map(|e| e.get_ids().iter().map(|i| *i as i64))
+        .flat_map(|e| e.ids().iter().map(|i| i.id() as i64))
         .collect();
     let mask: Vec<i64> = encodings
         .iter()
-        .flat_map(|e| e.get_attention_mask().iter().map(|i| *i as i64))
+        .flat_map(|e| e.attention_mask().unwrap_or(&[]).iter().map(|&b| b as i64))
         .collect();
     let type_ids: Vec<i64> = encodings
         .iter()
-        .flat_map(|e| e.get_type_ids().iter().map(|i| *i as i64))
+        .flat_map(|e| e.type_ids().unwrap_or(&[]).iter().map(|&b| b as i64))
         .collect();
 
     // Convert our flattened arrays into 2-dimensional tensors of shape [N, L].
@@ -86,15 +86,21 @@ mod tests {
 
     #[test]
     fn run_inference_returns_one_score_per_document() {
-        let tokenizer =
+        let (tokenizer, padding_params, truncation_params) =
             load_tokenizer("testfiles/tokenizer.json", None).expect("tokenizer should load");
         let documents = [
             "rust is a language",
             "paris is in france",
             "another document",
         ];
-        let encodings =
-            encode_batch(&tokenizer, "what is rust", &documents).expect("encoding should succeed");
+        let encodings = encode_batch(
+            &tokenizer,
+            &padding_params,
+            &truncation_params,
+            "what is rust",
+            &documents,
+        )
+        .expect("encoding should succeed");
         let mut session = test_session();
 
         let scores = run_inference(&mut session, encodings, documents.len(), true)
@@ -108,14 +114,20 @@ mod tests {
 
     #[test]
     fn run_inference_ranks_relevant_document_higher() {
-        let tokenizer =
+        let (tokenizer, padding, truncation) =
             load_tokenizer("testfiles/tokenizer.json", None).expect("tokenizer should load");
         let documents = [
             "rust is a systems programming language",
             "paris is in france",
         ];
-        let encodings =
-            encode_batch(&tokenizer, "what is rust", &documents).expect("encoding should succeed");
+        let encodings = encode_batch(
+            &tokenizer,
+            &padding,
+            &truncation,
+            "what is rust",
+            &documents,
+        )
+        .expect("encoding should succeed");
         let mut session = test_session();
 
         let scores = run_inference(&mut session, encodings, documents.len(), true)

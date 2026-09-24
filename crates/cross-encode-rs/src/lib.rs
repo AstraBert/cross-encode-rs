@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use ort::session::{Session, builder::GraphOptimizationLevel};
-use tokenizers::Tokenizer;
+use tokenizers::{PaddingParams, TruncationParams, pipeline::PipelineTokenizer};
 
 use crate::{
     inference::run_inference,
@@ -21,7 +21,6 @@ pub use errors::CrossEncoderError;
 
 /// Scores documents against a query with an ONNX cross-encoder. Model and
 /// tokenizer are lazily loaded on first use.
-#[derive(Debug)]
 pub struct CrossEncoder {
     pub tokenizer_path: PathBuf,
     pub model_path: PathBuf,
@@ -29,7 +28,9 @@ pub struct CrossEncoder {
     pub fallback_tokenizer_max_length: Option<usize>,
     pub use_type_ids: bool,
     model: Option<Session>,
-    tokenizer: Option<Tokenizer>,
+    tokenizer: Option<PipelineTokenizer>,
+    truncation: Option<TruncationParams>,
+    padding: Option<PaddingParams>,
 }
 
 /// A single document's rerank outcome: its original index, relevance score
@@ -69,6 +70,8 @@ impl CrossEncoder {
             use_type_ids,
             tokenizer: None,
             model: None,
+            truncation: None,
+            padding: None,
         }
     }
 
@@ -92,6 +95,8 @@ impl CrossEncoder {
             use_type_ids,
             model: None,
             tokenizer: None,
+            truncation: None,
+            padding: None,
         })
     }
 
@@ -113,10 +118,12 @@ impl CrossEncoder {
             return Ok(());
         }
 
-        self.tokenizer = Some(load_tokenizer(
-            &self.tokenizer_path,
-            self.fallback_tokenizer_max_length,
-        )?);
+        let (tok, pad, trn) =
+            load_tokenizer(&self.tokenizer_path, self.fallback_tokenizer_max_length)?;
+
+        self.tokenizer = Some(tok);
+        self.truncation = Some(trn);
+        self.padding = Some(pad);
         Ok(())
     }
 
@@ -139,8 +146,10 @@ impl CrossEncoder {
         self.init_tokenizer()?;
         if let Some(ref tokenizer) = self.tokenizer
             && let Some(ref mut model) = self.model
+            && let Some(ref padding) = self.padding
+            && let Some(ref truncation) = self.truncation
         {
-            let encodings = encode_batch(tokenizer, query, documents)?;
+            let encodings = encode_batch(tokenizer, padding, truncation, query, documents)?;
             let scores = run_inference(model, encodings, documents.len(), self.use_type_ids)?;
             let mut results: Vec<RerankResult> = Vec::with_capacity(scores.len());
             for (idx, score) in scores.iter().enumerate() {
