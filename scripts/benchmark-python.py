@@ -35,6 +35,12 @@ parser.add_argument(
     help="sentence-transformers model id or path. If not provided, skips running sentence-transformers.",
 )
 parser.add_argument(
+    "--remote-code",
+    default=False,
+    action="store_true",
+    help="enable remote_code = True on sentence-transformers",
+)
+parser.add_argument(
     "--load-only",
     default=False,
     action="store_true",
@@ -132,16 +138,16 @@ def print_report(entry_durations: list[float], doc_counts: list[int]) -> None:
     print(format_duration_stats(Stats.from_values(per_doc_durations)))
 
 
-def load_st_model(model_name: str) -> tuple["CrossEncoder", float]:
+def load_st_model(model_name: str, remote_code: bool) -> tuple["CrossEncoder", float]:
     from sentence_transformers import CrossEncoder
 
     start = time.monotonic()
-    model = CrossEncoder(model_name, num_labels=1, backend="onnx")
+    model = CrossEncoder(model_name, num_labels=1, backend="onnx", model_kwargs={"provider": "CPUExecutionProvider"}, trust_remote_code=remote_code)
     return (model, (time.monotonic() - start) * 1000)
 
 
 def benchmark_sentence_transformers(
-    entries: list[dict], model: "CrossEncoder"
+    entries: list[dict], model: "CrossEncoder",
 ) -> tuple[list[float], list[int]]:
     durations = []
     doc_counts = []
@@ -204,7 +210,7 @@ def benchmark_fastembed(
 def main() -> None:
     if args.load_only:
         if args.st_model:
-            _, t = load_st_model(args.st_model)
+            _, t = load_st_model(args.st_model, args.remote_code)
             print(t)
         else:
             print(time_fastembed_session(args.fastembed_model))
@@ -214,7 +220,7 @@ def main() -> None:
 
     if args.st_model:
         print(f"sentence-transformers ({args.st_model}, onnx backend)")
-        model, _ = load_st_model(args.st_model)
+        model, _ = load_st_model(args.st_model, args.remote_code)
         print_report(*benchmark_sentence_transformers(entries, model))
         print()
 
