@@ -132,11 +132,12 @@ def print_report(entry_durations: list[float], doc_counts: list[int]) -> None:
     print(format_duration_stats(Stats.from_values(per_doc_durations)))
 
 
-def load_st_model(model_name: str) -> "CrossEncoder":
+def load_st_model(model_name: str) -> tuple["CrossEncoder", float]:
     from sentence_transformers import CrossEncoder
 
+    start = time.monotonic()
     model = CrossEncoder(model_name, num_labels=1, backend="onnx")
-    return model
+    return (model, (time.monotonic() - start) * 1000)
 
 
 def benchmark_sentence_transformers(
@@ -154,11 +155,12 @@ def benchmark_sentence_transformers(
     return durations, doc_counts
 
 
-def load_fastembed_model(model_name: str) -> "TextCrossEncoder":
+def load_fastembed_model(model_name: str) -> tuple["TextCrossEncoder", float]:
     from fastembed.rerank.cross_encoder import TextCrossEncoder
 
+    start = time.monotonic()
     model = TextCrossEncoder(model_name=model_name)
-    return model
+    return (model, (time.monotonic() - start) * 1000)
 
 
 def benchmark_fastembed(
@@ -179,27 +181,23 @@ def benchmark_fastembed(
 def main() -> None:
     if args.load_only:
         if args.st_model:
-            start = time.monotonic()
-            load_st_model(args.st_model)
-            # milliseconds
-            print((time.monotonic() - start) * 1000)
+            _, t = load_st_model(args.st_model)
+            print(t)
         else:
-            start = time.monotonic()
-            load_fastembed_model(args.fastembed_model)
-            # milliseconds
-            print((time.monotonic() - start) * 1000)
+            _, t = load_fastembed_model(args.fastembed_model)
+            print(t)
         return
 
     entries = load_entries(args.data)
 
     if args.st_model:
         print(f"sentence-transformers ({args.st_model}, onnx backend)")
-        model = load_st_model(args.st_model)
+        model, _ = load_st_model(args.st_model)
         print_report(*benchmark_sentence_transformers(entries, model))
         print()
 
     print(f"fastembed ({args.fastembed_model})")
-    model = load_fastembed_model(args.fastembed_model)
+    model, _ = load_fastembed_model(args.fastembed_model)
     print_report(*benchmark_fastembed(entries, model))
 
 
