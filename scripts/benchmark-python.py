@@ -179,9 +179,15 @@ def benchmark_fastembed(
 def main() -> None:
     if args.load_only:
         if args.st_model:
+            start = time.monotonic()
             load_st_model(args.st_model)
+            # milliseconds
+            print((time.monotonic() - start) * 1000)
         else:
+            start = time.monotonic()
             load_fastembed_model(args.fastembed_model)
+            # milliseconds
+            print((time.monotonic() - start) * 1000)
         return
 
     entries = load_entries(args.data)

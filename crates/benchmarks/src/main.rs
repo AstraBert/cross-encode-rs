@@ -190,7 +190,9 @@ fn main() -> Result<(), BenchmarkError> {
     );
 
     if load_only {
+        let start = Instant::now();
         cross_encoder.initialize()?;
+        println!("{}", start.elapsed().as_millis());
         return Ok(());
     }
 
