@@ -1,6 +1,7 @@
 target/
 .venv/
 .ruff_cache/
+__pycache__/
 .env
 xenova/
 !crates/cross-encode-rs/testfiles/model.onnx

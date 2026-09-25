@@ -164,8 +164,14 @@ fn print_report(
 fn main() -> Result<(), BenchmarkError> {
     let args: Vec<String> = env::args().collect();
 
-    if args.len() != 3 {
-        return Err("This commands accept exactly two positional arguments: MODEL_DIRECTORY (directory where model.onnx and tokenizer.json are stored) and USE_TYPE_IDS (true or false)".into());
+    if args.len() < 3 {
+        return Err("This commands requires at least two positional arguments: MODEL_DIRECTORY (directory where model.onnx and tokenizer.json are stored) and USE_TYPE_IDS (true or false)".into());
+    }
+
+    let mut load_only = false;
+
+    if args.len() == 4 {
+        load_only = args[3] == "true";
     }
 
     let model_dir = PathBuf::from(&args[1]);
@@ -182,6 +188,13 @@ fn main() -> Result<(), BenchmarkError> {
         None,
         use_type_ids,
     );
+
+    if load_only {
+        let start = Instant::now();
+        cross_encoder.init_model()?;
+        println!("{}", start.elapsed().as_secs_f64() * 1000.0);
+        return Ok(());
+    }
 
     cross_encoder.initialize()?;
 

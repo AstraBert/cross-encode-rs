@@ -17,11 +17,13 @@ import gzip
 import json
 import time
 from dataclasses import dataclass
-from typing import Generic, TypeVar
+from typing import TYPE_CHECKING, Generic, TypeVar
 
-from fastembed.rerank.cross_encoder import TextCrossEncoder
-from sentence_transformers import CrossEncoder
 from tqdm import tqdm
+
+if TYPE_CHECKING:
+    from fastembed.rerank.cross_encoder import TextCrossEncoder
+    from sentence_transformers import CrossEncoder
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -29,8 +31,14 @@ parser.add_argument(
 )
 parser.add_argument(
     "--st-model",
-    default="Xenova/ms-marco-MiniLM-L-6-v2",
-    help="sentence-transformers model id or path",
+    default="",
+    help="sentence-transformers model id or path. If not provided, skips running sentence-transformers.",
+)
+parser.add_argument(
+    "--load-only",
+    default=False,
+    action="store_true",
+    help="only load models without running the benchmark",
 )
 parser.add_argument(
     "--fastembed-model",
@@ -124,11 +132,17 @@ def print_report(entry_durations: list[float], doc_counts: list[int]) -> None:
     print(format_duration_stats(Stats.from_values(per_doc_durations)))
 
 
-def benchmark_sentence_transformers(
-    entries: list[dict], model_name: str
-) -> tuple[list[float], list[int]]:
-    model = CrossEncoder(model_name, num_labels=1, backend="onnx")
+def load_st_model(model_name: str) -> tuple["CrossEncoder", float]:
+    from sentence_transformers import CrossEncoder
 
+    start = time.monotonic()
+    model = CrossEncoder(model_name, num_labels=1, backend="onnx")
+    return (model, (time.monotonic() - start) * 1000)
+
+
+def benchmark_sentence_transformers(
+    entries: list[dict], model: "CrossEncoder"
+) -> tuple[list[float], list[int]]:
     durations = []
     doc_counts = []
     for entry in tqdm(entries):
@@ -141,11 +155,40 @@ def benchmark_sentence_transformers(
     return durations, doc_counts
 
 
-def benchmark_fastembed(
-    entries: list[dict], model_name: str
-) -> tuple[list[float], list[int]]:
-    model = TextCrossEncoder(model_name=model_name)
+def load_fastembed_model(model_name: str) -> tuple["TextCrossEncoder", float]:
+    from fastembed.rerank.cross_encoder import TextCrossEncoder
 
+    start = time.monotonic()
+    model = TextCrossEncoder(model_name=model_name)
+    return (model, (time.monotonic() - start) * 1000)
+
+
+def time_fastembed_session(model_name: str) -> float:
+    """Times only the ONNX session creation, to match `init_model()` on the
+    Rust side. The constructor also resolves the model files and loads the
+    tokenizer, so it runs lazily and untimed, and the session is built through
+    the base class to skip `load_tokenizer`."""
+    from fastembed.common.onnx_model import OnnxModel
+    from fastembed.rerank.cross_encoder import TextCrossEncoder
+
+    inner = TextCrossEncoder(model_name=model_name, lazy_load=True).model
+    start = time.monotonic()
+    OnnxModel._load_onnx_model(
+        inner,
+        model_dir=inner._model_dir,
+        model_file=inner.model_description.model_file,
+        threads=inner.threads,
+        providers=inner.providers,
+        cuda=inner.cuda,
+        device_id=inner.device_id,
+        extra_session_options=inner._extra_session_options,
+    )
+    return (time.monotonic() - start) * 1000
+
+
+def benchmark_fastembed(
+    entries: list[dict], model: "TextCrossEncoder"
+) -> tuple[list[float], list[int]]:
     durations = []
     doc_counts = []
     for entry in tqdm(entries):
@@ -159,14 +202,25 @@ def benchmark_fastembed(
 
 
 def main() -> None:
+    if args.load_only:
+        if args.st_model:
+            _, t = load_st_model(args.st_model)
+            print(t)
+        else:
+            print(time_fastembed_session(args.fastembed_model))
+        return
+
     entries = load_entries(args.data)
 
-    print(f"sentence-transformers ({args.st_model}, onnx backend)")
-    print_report(*benchmark_sentence_transformers(entries, args.st_model))
-    print()
+    if args.st_model:
+        print(f"sentence-transformers ({args.st_model}, onnx backend)")
+        model, _ = load_st_model(args.st_model)
+        print_report(*benchmark_sentence_transformers(entries, model))
+        print()
 
     print(f"fastembed ({args.fastembed_model})")
-    print_report(*benchmark_fastembed(entries, args.fastembed_model))
+    model, _ = load_fastembed_model(args.fastembed_model)
+    print_report(*benchmark_fastembed(entries, model))
 
 
 if __name__ == "__main__":

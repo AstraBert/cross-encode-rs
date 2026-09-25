@@ -275,6 +275,96 @@
   <tbody><tr><td>min</td><td>0.55 ms</td><td>0.46 ms</td><td>2.90 ms</td></tr><tr><td>p50</td><td>0.85 ms</td><td>0.92 ms</td><td>7.15 ms</td></tr><tr><td>p90</td><td>1.02 ms</td><td>1.21 ms</td><td>9.44 ms</td></tr><tr><td>p99</td><td>1.20 ms</td><td>1.64 ms</td><td>12.48 ms</td></tr><tr><td>max</td><td>1.80 ms</td><td>2.39 ms</td><td>17.84 ms</td></tr></tbody>
 </table>
   </section>
+  <section class="chart">
+    <h2>jina: Model load time (ms, lower is better)</h2>
+    
+    <div class="legend"><span><span class="swatch" style="background:#2F6FF0"></span>cross-encode-rs</span><span><span class="swatch" style="background:#038585"></span>fastembed</span></div>
+<svg viewBox="-40 0 1000 372" role="img" aria-label="model load time, ms (lower is better) by statistic" font-family='ui-monospace, "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace'>
+<line class="gridline" x1="64.0" y1="4" x2="64.0" y2="296"/>
+<text class="tick-label" x="64.0" y="318" text-anchor="middle">0</text>
+<line class="gridline" x1="260.5" y1="4" x2="260.5" y2="296"/>
+<text class="tick-label" x="260.5" y="318" text-anchor="middle">100</text>
+<line class="gridline" x1="457.0" y1="4" x2="457.0" y2="296"/>
+<text class="tick-label" x="457.0" y="318" text-anchor="middle">200</text>
+<line class="gridline" x1="653.5" y1="4" x2="653.5" y2="296"/>
+<text class="tick-label" x="653.5" y="318" text-anchor="middle">300</text>
+<line class="gridline" x1="850.0" y1="4" x2="850.0" y2="296"/>
+<text class="tick-label" x="850.0" y="318" text-anchor="middle">400</text>
+<line class="axis" x1="64" y1="296" x2="850.0" y2="296"/>
+<text class="axis-title" x="457.0" y="356" text-anchor="middle">model load time, ms (lower is better)</text>
+<text class="axis-title" x="-22" y="144.0" text-anchor="middle" dominant-baseline="middle" transform="rotate(-90 -22 144.0)">statistic</text>
+<text class="cat-label" x="52" y="35.0" text-anchor="end">mean</text>
+<rect x="64" y="4.0" width="661.5" height="24" fill="#2F6FF0"/>
+<text class="bar-label" x="733.5" y="21.0">336.6 ms</text>
+<rect x="64" y="32.0" width="654.4" height="24" fill="#038585"/>
+<text class="bar-label" x="726.4" y="49.0">333.1 ms</text>
+<text class="cat-label" x="52" y="111.0" text-anchor="end">p50</text>
+<rect x="64" y="80.0" width="660.4" height="24" fill="#2F6FF0"/>
+<text class="bar-label" x="732.4" y="97.0">336.1 ms</text>
+<rect x="64" y="108.0" width="654.6" height="24" fill="#038585"/>
+<text class="bar-label" x="726.6" y="125.0">333.1 ms</text>
+<text class="cat-label" x="52" y="187.0" text-anchor="end">p90</text>
+<rect x="64" y="156.0" width="667.0" height="24" fill="#2F6FF0"/>
+<text class="bar-label" x="739.0" y="173.0">339.5 ms</text>
+<rect x="64" y="184.0" width="662.4" height="24" fill="#038585"/>
+<text class="bar-label" x="734.4" y="201.0">337.1 ms</text>
+<text class="cat-label" x="52" y="263.0" text-anchor="end">p99</text>
+<rect x="64" y="232.0" width="776.6" height="24" fill="#2F6FF0"/>
+<text class="bar-label" x="848.6" y="249.0">395.2 ms</text>
+<rect x="64" y="260.0" width="665.6" height="24" fill="#038585"/>
+<text class="bar-label" x="737.6" y="277.0">338.7 ms</text>
+</svg>
+    <table>
+  <caption>Exact figures</caption>
+  <thead><tr><th>statistic</th><th>cross-encode-rs</th><th>fastembed</th></tr></thead>
+  <tbody><tr><td>mean</td><td>336.6 ms</td><td>333.1 ms</td></tr><tr><td>p50</td><td>336.1 ms</td><td>333.1 ms</td></tr><tr><td>p90</td><td>339.5 ms</td><td>337.1 ms</td></tr><tr><td>p99</td><td>395.2 ms</td><td>338.7 ms</td></tr></tbody>
+</table>
+  </section>
+  <section class="chart">
+    <h2>Xenova/ms-marco-MiniLM-L-6-v2: Model load time (ms, lower is better)</h2>
+    
+    <div class="legend"><span><span class="swatch" style="background:#2F6FF0"></span>cross-encode-rs</span><span><span class="swatch" style="background:#038585"></span>fastembed</span></div>
+<svg viewBox="-40 0 1000 372" role="img" aria-label="model load time, ms (lower is better) by statistic" font-family='ui-monospace, "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace'>
+<line class="gridline" x1="64.0" y1="4" x2="64.0" y2="296"/>
+<text class="tick-label" x="64.0" y="318" text-anchor="middle">0</text>
+<line class="gridline" x1="260.5" y1="4" x2="260.5" y2="296"/>
+<text class="tick-label" x="260.5" y="318" text-anchor="middle">10</text>
+<line class="gridline" x1="457.0" y1="4" x2="457.0" y2="296"/>
+<text class="tick-label" x="457.0" y="318" text-anchor="middle">20</text>
+<line class="gridline" x1="653.5" y1="4" x2="653.5" y2="296"/>
+<text class="tick-label" x="653.5" y="318" text-anchor="middle">30</text>
+<line class="gridline" x1="850.0" y1="4" x2="850.0" y2="296"/>
+<text class="tick-label" x="850.0" y="318" text-anchor="middle">40</text>
+<line class="axis" x1="64" y1="296" x2="850.0" y2="296"/>
+<text class="axis-title" x="457.0" y="356" text-anchor="middle">model load time, ms (lower is better)</text>
+<text class="axis-title" x="-22" y="144.0" text-anchor="middle" dominant-baseline="middle" transform="rotate(-90 -22 144.0)">statistic</text>
+<text class="cat-label" x="52" y="35.0" text-anchor="end">mean</text>
+<rect x="64" y="4.0" width="739.1" height="24" fill="#2F6FF0"/>
+<text class="bar-label" x="811.1" y="21.0">37.6 ms</text>
+<rect x="64" y="32.0" width="658.7" height="24" fill="#038585"/>
+<text class="bar-label" x="730.7" y="49.0">33.5 ms</text>
+<text class="cat-label" x="52" y="111.0" text-anchor="end">p50</text>
+<rect x="64" y="80.0" width="738.9" height="24" fill="#2F6FF0"/>
+<text class="bar-label" x="810.9" y="97.0">37.6 ms</text>
+<rect x="64" y="108.0" width="657.4" height="24" fill="#038585"/>
+<text class="bar-label" x="729.4" y="125.0">33.5 ms</text>
+<text class="cat-label" x="52" y="187.0" text-anchor="end">p90</text>
+<rect x="64" y="156.0" width="746.4" height="24" fill="#2F6FF0"/>
+<text class="bar-label" x="818.4" y="173.0">38.0 ms</text>
+<rect x="64" y="184.0" width="664.2" height="24" fill="#038585"/>
+<text class="bar-label" x="736.2" y="201.0">33.8 ms</text>
+<text class="cat-label" x="52" y="263.0" text-anchor="end">p99</text>
+<rect x="64" y="232.0" width="755.1" height="24" fill="#2F6FF0"/>
+<text class="bar-label" x="827.1" y="249.0">38.4 ms</text>
+<rect x="64" y="260.0" width="684.7" height="24" fill="#038585"/>
+<text class="bar-label" x="756.7" y="277.0">34.8 ms</text>
+</svg>
+    <table>
+  <caption>Exact figures</caption>
+  <thead><tr><th>statistic</th><th>cross-encode-rs</th><th>fastembed</th></tr></thead>
+  <tbody><tr><td>mean</td><td>37.6 ms</td><td>33.5 ms</td></tr><tr><td>p50</td><td>37.6 ms</td><td>33.5 ms</td></tr><tr><td>p90</td><td>38.0 ms</td><td>33.8 ms</td></tr><tr><td>p99</td><td>38.4 ms</td><td>34.8 ms</td></tr></tbody>
+</table>
+  </section>
 
   <footer>Generated by scripts/render-benchmark-charts.py from the source .txt files. Re-run it after updating results.</footer>
 </main>
