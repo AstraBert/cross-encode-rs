@@ -62,104 +62,6 @@
   <section class="chart">
     <h2>jina: Per-request latency (ms, lower is better)</h2>
     
-    <div class="legend"><span><span class="swatch" style="background:#2F6FF0"></span>cross-encode-rs</span><span><span class="swatch" style="background:#038585"></span>fastembed</span></div>
-<svg viewBox="-40 0 1000 448" role="img" aria-label="per-request latency, ms (lower is better) by percentile" font-family='ui-monospace, "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace'>
-<line class="gridline" x1="64.0" y1="4" x2="64.0" y2="372"/>
-<text class="tick-label" x="64.0" y="394" text-anchor="middle">0</text>
-<line class="gridline" x1="326.0" y1="4" x2="326.0" y2="372"/>
-<text class="tick-label" x="326.0" y="394" text-anchor="middle">200</text>
-<line class="gridline" x1="588.0" y1="4" x2="588.0" y2="372"/>
-<text class="tick-label" x="588.0" y="394" text-anchor="middle">400</text>
-<line class="gridline" x1="850.0" y1="4" x2="850.0" y2="372"/>
-<text class="tick-label" x="850.0" y="394" text-anchor="middle">600</text>
-<line class="axis" x1="64" y1="372" x2="850.0" y2="372"/>
-<text class="axis-title" x="457.0" y="432" text-anchor="middle">per-request latency, ms (lower is better)</text>
-<text class="axis-title" x="-22" y="182.0" text-anchor="middle" dominant-baseline="middle" transform="rotate(-90 -22 182.0)">percentile</text>
-<text class="cat-label" x="52" y="35.0" text-anchor="end">min</text>
-<rect x="64" y="4.0" width="97.6" height="24" fill="#2F6FF0"/>
-<text class="bar-label" x="169.6" y="21.0">74.51 ms</text>
-<rect x="64" y="32.0" width="123.7" height="24" fill="#038585"/>
-<text class="bar-label" x="195.7" y="49.0">94.43 ms</text>
-<text class="cat-label" x="52" y="111.0" text-anchor="end">p50</text>
-<rect x="64" y="80.0" width="171.6" height="24" fill="#2F6FF0"/>
-<text class="bar-label" x="243.6" y="97.0">131.00 ms</text>
-<rect x="64" y="108.0" width="247.0" height="24" fill="#038585"/>
-<text class="bar-label" x="319.0" y="125.0">188.53 ms</text>
-<text class="cat-label" x="52" y="187.0" text-anchor="end">p90</text>
-<rect x="64" y="156.0" width="236.7" height="24" fill="#2F6FF0"/>
-<text class="bar-label" x="308.7" y="173.0">180.71 ms</text>
-<rect x="64" y="184.0" width="327.4" height="24" fill="#038585"/>
-<text class="bar-label" x="399.4" y="201.0">249.93 ms</text>
-<text class="cat-label" x="52" y="263.0" text-anchor="end">p99</text>
-<rect x="64" y="232.0" width="328.5" height="24" fill="#2F6FF0"/>
-<text class="bar-label" x="400.5" y="249.0">250.75 ms</text>
-<rect x="64" y="260.0" width="446.0" height="24" fill="#038585"/>
-<text class="bar-label" x="518.0" y="277.0">340.43 ms</text>
-<text class="cat-label" x="52" y="339.0" text-anchor="end">max</text>
-<rect x="64" y="308.0" width="761.6" height="24" fill="#2F6FF0"/>
-<text class="bar-label" x="833.6" y="325.0">581.39 ms</text>
-<rect x="64" y="336.0" width="629.0" height="24" fill="#038585"/>
-<text class="bar-label" x="701.0" y="353.0">480.12 ms</text>
-</svg>
-    <table>
-  <caption>Exact figures</caption>
-  <thead><tr><th>percentile</th><th>cross-encode-rs</th><th>fastembed</th></tr></thead>
-  <tbody><tr><td>min</td><td>74.51 ms</td><td>94.43 ms</td></tr><tr><td>p50</td><td>131.00 ms</td><td>188.53 ms</td></tr><tr><td>p90</td><td>180.71 ms</td><td>249.93 ms</td></tr><tr><td>p99</td><td>250.75 ms</td><td>340.43 ms</td></tr><tr><td>max</td><td>581.39 ms</td><td>480.12 ms</td></tr></tbody>
-</table>
-  </section>
-  <section class="chart">
-    <h2>jina: Per-document latency (ms, lower is better)</h2>
-    
-    <div class="legend"><span><span class="swatch" style="background:#2F6FF0"></span>cross-encode-rs</span><span><span class="swatch" style="background:#038585"></span>fastembed</span></div>
-<svg viewBox="-40 0 1000 448" role="img" aria-label="per-document latency, ms (lower is better) by percentile" font-family='ui-monospace, "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace'>
-<line class="gridline" x1="64.0" y1="4" x2="64.0" y2="372"/>
-<text class="tick-label" x="64.0" y="394" text-anchor="middle">0</text>
-<line class="gridline" x1="260.5" y1="4" x2="260.5" y2="372"/>
-<text class="tick-label" x="260.5" y="394" text-anchor="middle">5</text>
-<line class="gridline" x1="457.0" y1="4" x2="457.0" y2="372"/>
-<text class="tick-label" x="457.0" y="394" text-anchor="middle">10</text>
-<line class="gridline" x1="653.5" y1="4" x2="653.5" y2="372"/>
-<text class="tick-label" x="653.5" y="394" text-anchor="middle">15</text>
-<line class="gridline" x1="850.0" y1="4" x2="850.0" y2="372"/>
-<text class="tick-label" x="850.0" y="394" text-anchor="middle">20</text>
-<line class="axis" x1="64" y1="372" x2="850.0" y2="372"/>
-<text class="axis-title" x="457.0" y="432" text-anchor="middle">per-document latency, ms (lower is better)</text>
-<text class="axis-title" x="-22" y="182.0" text-anchor="middle" dominant-baseline="middle" transform="rotate(-90 -22 182.0)">percentile</text>
-<text class="cat-label" x="52" y="35.0" text-anchor="end">min</text>
-<rect x="64" y="4.0" width="97.6" height="24" fill="#2F6FF0"/>
-<text class="bar-label" x="169.6" y="21.0">2.48 ms</text>
-<rect x="64" y="32.0" width="123.8" height="24" fill="#038585"/>
-<text class="bar-label" x="195.8" y="49.0">3.15 ms</text>
-<text class="cat-label" x="52" y="111.0" text-anchor="end">p50</text>
-<rect x="64" y="80.0" width="172.8" height="24" fill="#2F6FF0"/>
-<text class="bar-label" x="244.8" y="97.0">4.40 ms</text>
-<rect x="64" y="108.0" width="249.2" height="24" fill="#038585"/>
-<text class="bar-label" x="321.2" y="125.0">6.34 ms</text>
-<text class="cat-label" x="52" y="187.0" text-anchor="end">p90</text>
-<rect x="64" y="156.0" width="239.3" height="24" fill="#2F6FF0"/>
-<text class="bar-label" x="311.3" y="173.0">6.09 ms</text>
-<rect x="64" y="184.0" width="330.1" height="24" fill="#038585"/>
-<text class="bar-label" x="402.1" y="201.0">8.40 ms</text>
-<text class="cat-label" x="52" y="263.0" text-anchor="end">p99</text>
-<rect x="64" y="232.0" width="328.5" height="24" fill="#2F6FF0"/>
-<text class="bar-label" x="400.5" y="249.0">8.36 ms</text>
-<rect x="64" y="260.0" width="446.1" height="24" fill="#038585"/>
-<text class="bar-label" x="518.1" y="277.0">11.35 ms</text>
-<text class="cat-label" x="52" y="339.0" text-anchor="end">max</text>
-<rect x="64" y="308.0" width="761.6" height="24" fill="#2F6FF0"/>
-<text class="bar-label" x="833.6" y="325.0">19.38 ms</text>
-<rect x="64" y="336.0" width="628.8" height="24" fill="#038585"/>
-<text class="bar-label" x="700.8" y="353.0">16.00 ms</text>
-</svg>
-    <table>
-  <caption>Exact figures</caption>
-  <thead><tr><th>percentile</th><th>cross-encode-rs</th><th>fastembed</th></tr></thead>
-  <tbody><tr><td>min</td><td>2.48 ms</td><td>3.15 ms</td></tr><tr><td>p50</td><td>4.40 ms</td><td>6.34 ms</td></tr><tr><td>p90</td><td>6.09 ms</td><td>8.40 ms</td></tr><tr><td>p99</td><td>8.36 ms</td><td>11.35 ms</td></tr><tr><td>max</td><td>19.38 ms</td><td>16.00 ms</td></tr></tbody>
-</table>
-  </section>
-  <section class="chart">
-    <h2>Xenova/ms-marco-MiniLM-L-6-v2: Per-request latency (ms, lower is better)</h2>
-    
     <div class="legend"><span><span class="swatch" style="background:#2F6FF0"></span>cross-encode-rs</span><span><span class="swatch" style="background:#038585"></span>fastembed</span><span><span class="swatch" style="background:#717C99"></span>sentence-transformers</span></div>
 <svg viewBox="-40 0 1000 588" role="img" aria-label="per-request latency, ms (lower is better) by percentile" font-family='ui-monospace, "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace'>
 <line class="gridline" x1="64.0" y1="4" x2="64.0" y2="512"/>
@@ -174,49 +76,49 @@
 <text class="axis-title" x="457.0" y="572" text-anchor="middle">per-request latency, ms (lower is better)</text>
 <text class="axis-title" x="-22" y="252.0" text-anchor="middle" dominant-baseline="middle" transform="rotate(-90 -22 252.0)">percentile</text>
 <text class="cat-label" x="52" y="49.0" text-anchor="end">min</text>
-<rect x="64" y="4.0" width="21.8" height="24" fill="#2F6FF0"/>
-<text class="bar-label" x="93.8" y="21.0">16.63 ms</text>
-<rect x="64" y="32.0" width="18.1" height="24" fill="#038585"/>
-<text class="bar-label" x="90.1" y="49.0">13.79 ms</text>
-<rect x="64" y="60.0" width="113.8" height="24" fill="#717C99"/>
-<text class="bar-label" x="185.8" y="77.0">86.89 ms</text>
+<rect x="64" y="4.0" width="97.6" height="24" fill="#2F6FF0"/>
+<text class="bar-label" x="169.6" y="21.0">74.51 ms</text>
+<rect x="64" y="32.0" width="123.7" height="24" fill="#038585"/>
+<text class="bar-label" x="195.7" y="49.0">94.43 ms</text>
+<rect x="64" y="60.0" width="122.9" height="24" fill="#717C99"/>
+<text class="bar-label" x="194.9" y="77.0">93.83 ms</text>
 <text class="cat-label" x="52" y="153.0" text-anchor="end">p50</text>
-<rect x="64" y="108.0" width="33.3" height="24" fill="#2F6FF0"/>
-<text class="bar-label" x="105.3" y="125.0">25.43 ms</text>
-<rect x="64" y="136.0" width="36.0" height="24" fill="#038585"/>
-<text class="bar-label" x="108.0" y="153.0">27.45 ms</text>
-<rect x="64" y="164.0" width="279.1" height="24" fill="#717C99"/>
-<text class="bar-label" x="351.1" y="181.0">213.08 ms</text>
+<rect x="64" y="108.0" width="171.6" height="24" fill="#2F6FF0"/>
+<text class="bar-label" x="243.6" y="125.0">131.00 ms</text>
+<rect x="64" y="136.0" width="247.0" height="24" fill="#038585"/>
+<text class="bar-label" x="319.0" y="153.0">188.53 ms</text>
+<rect x="64" y="164.0" width="249.9" height="24" fill="#717C99"/>
+<text class="bar-label" x="321.9" y="181.0">190.79 ms</text>
 <text class="cat-label" x="52" y="257.0" text-anchor="end">p90</text>
-<rect x="64" y="212.0" width="39.9" height="24" fill="#2F6FF0"/>
-<text class="bar-label" x="111.9" y="229.0">30.47 ms</text>
-<rect x="64" y="240.0" width="47.4" height="24" fill="#038585"/>
-<text class="bar-label" x="119.4" y="257.0">36.16 ms</text>
-<rect x="64" y="268.0" width="368.2" height="24" fill="#717C99"/>
-<text class="bar-label" x="440.2" y="285.0">281.10 ms</text>
+<rect x="64" y="212.0" width="236.7" height="24" fill="#2F6FF0"/>
+<text class="bar-label" x="308.7" y="229.0">180.71 ms</text>
+<rect x="64" y="240.0" width="327.4" height="24" fill="#038585"/>
+<text class="bar-label" x="399.4" y="257.0">249.93 ms</text>
+<rect x="64" y="268.0" width="333.2" height="24" fill="#717C99"/>
+<text class="bar-label" x="405.2" y="285.0">254.38 ms</text>
 <text class="cat-label" x="52" y="361.0" text-anchor="end">p99</text>
-<rect x="64" y="316.0" width="47.0" height="24" fill="#2F6FF0"/>
-<text class="bar-label" x="119.0" y="333.0">35.91 ms</text>
-<rect x="64" y="344.0" width="64.5" height="24" fill="#038585"/>
-<text class="bar-label" x="136.5" y="361.0">49.23 ms</text>
-<rect x="64" y="372.0" width="490.3" height="24" fill="#717C99"/>
-<text class="bar-label" x="562.3" y="389.0">374.26 ms</text>
+<rect x="64" y="316.0" width="328.5" height="24" fill="#2F6FF0"/>
+<text class="bar-label" x="400.5" y="333.0">250.75 ms</text>
+<rect x="64" y="344.0" width="446.0" height="24" fill="#038585"/>
+<text class="bar-label" x="518.0" y="361.0">340.43 ms</text>
+<rect x="64" y="372.0" width="440.7" height="24" fill="#717C99"/>
+<text class="bar-label" x="512.7" y="389.0">336.39 ms</text>
 <text class="cat-label" x="52" y="465.0" text-anchor="end">max</text>
-<rect x="64" y="420.0" width="70.6" height="24" fill="#2F6FF0"/>
-<text class="bar-label" x="142.6" y="437.0">53.89 ms</text>
-<rect x="64" y="448.0" width="94.1" height="24" fill="#038585"/>
-<text class="bar-label" x="166.1" y="465.0">71.80 ms</text>
-<rect x="64" y="476.0" width="701.1" height="24" fill="#717C99"/>
-<text class="bar-label" x="773.1" y="493.0">535.18 ms</text>
+<rect x="64" y="420.0" width="761.6" height="24" fill="#2F6FF0"/>
+<text class="bar-label" x="833.6" y="437.0">581.39 ms</text>
+<rect x="64" y="448.0" width="629.0" height="24" fill="#038585"/>
+<text class="bar-label" x="701.0" y="465.0">480.12 ms</text>
+<rect x="64" y="476.0" width="766.2" height="24" fill="#717C99"/>
+<text class="bar-label" x="838.2" y="493.0">584.86 ms</text>
 </svg>
     <table>
   <caption>Exact figures</caption>
   <thead><tr><th>percentile</th><th>cross-encode-rs</th><th>fastembed</th><th>sentence-transformers</th></tr></thead>
-  <tbody><tr><td>min</td><td>16.63 ms</td><td>13.79 ms</td><td>86.89 ms</td></tr><tr><td>p50</td><td>25.43 ms</td><td>27.45 ms</td><td>213.08 ms</td></tr><tr><td>p90</td><td>30.47 ms</td><td>36.16 ms</td><td>281.10 ms</td></tr><tr><td>p99</td><td>35.91 ms</td><td>49.23 ms</td><td>374.26 ms</td></tr><tr><td>max</td><td>53.89 ms</td><td>71.80 ms</td><td>535.18 ms</td></tr></tbody>
+  <tbody><tr><td>min</td><td>74.51 ms</td><td>94.43 ms</td><td>93.83 ms</td></tr><tr><td>p50</td><td>131.00 ms</td><td>188.53 ms</td><td>190.79 ms</td></tr><tr><td>p90</td><td>180.71 ms</td><td>249.93 ms</td><td>254.38 ms</td></tr><tr><td>p99</td><td>250.75 ms</td><td>340.43 ms</td><td>336.39 ms</td></tr><tr><td>max</td><td>581.39 ms</td><td>480.12 ms</td><td>584.86 ms</td></tr></tbody>
 </table>
   </section>
   <section class="chart">
-    <h2>Xenova/ms-marco-MiniLM-L-6-v2: Per-document latency (ms, lower is better)</h2>
+    <h2>jina: Per-document latency (ms, lower is better)</h2>
     
     <div class="legend"><span><span class="swatch" style="background:#2F6FF0"></span>cross-encode-rs</span><span><span class="swatch" style="background:#038585"></span>fastembed</span><span><span class="swatch" style="background:#717C99"></span>sentence-transformers</span></div>
 <svg viewBox="-40 0 1000 588" role="img" aria-label="per-document latency, ms (lower is better) by percentile" font-family='ui-monospace, "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace'>
@@ -234,45 +136,167 @@
 <text class="axis-title" x="457.0" y="572" text-anchor="middle">per-document latency, ms (lower is better)</text>
 <text class="axis-title" x="-22" y="252.0" text-anchor="middle" dominant-baseline="middle" transform="rotate(-90 -22 252.0)">percentile</text>
 <text class="cat-label" x="52" y="49.0" text-anchor="end">min</text>
-<rect x="64" y="4.0" width="21.8" height="24" fill="#2F6FF0"/>
-<text class="bar-label" x="93.8" y="21.0">0.55 ms</text>
-<rect x="64" y="32.0" width="18.1" height="24" fill="#038585"/>
-<text class="bar-label" x="90.1" y="49.0">0.46 ms</text>
-<rect x="64" y="60.0" width="114.0" height="24" fill="#717C99"/>
-<text class="bar-label" x="186.0" y="77.0">2.90 ms</text>
+<rect x="64" y="4.0" width="97.6" height="24" fill="#2F6FF0"/>
+<text class="bar-label" x="169.6" y="21.0">2.48 ms</text>
+<rect x="64" y="32.0" width="123.8" height="24" fill="#038585"/>
+<text class="bar-label" x="195.8" y="49.0">3.15 ms</text>
+<rect x="64" y="60.0" width="123.0" height="24" fill="#717C99"/>
+<text class="bar-label" x="195.0" y="77.0">3.13 ms</text>
 <text class="cat-label" x="52" y="153.0" text-anchor="end">p50</text>
-<rect x="64" y="108.0" width="33.5" height="24" fill="#2F6FF0"/>
-<text class="bar-label" x="105.5" y="125.0">0.85 ms</text>
-<rect x="64" y="136.0" width="36.2" height="24" fill="#038585"/>
-<text class="bar-label" x="108.2" y="153.0">0.92 ms</text>
-<rect x="64" y="164.0" width="281.0" height="24" fill="#717C99"/>
-<text class="bar-label" x="353.0" y="181.0">7.15 ms</text>
+<rect x="64" y="108.0" width="172.8" height="24" fill="#2F6FF0"/>
+<text class="bar-label" x="244.8" y="125.0">4.40 ms</text>
+<rect x="64" y="136.0" width="249.2" height="24" fill="#038585"/>
+<text class="bar-label" x="321.2" y="153.0">6.34 ms</text>
+<rect x="64" y="164.0" width="252.3" height="24" fill="#717C99"/>
+<text class="bar-label" x="324.3" y="181.0">6.42 ms</text>
 <text class="cat-label" x="52" y="257.0" text-anchor="end">p90</text>
-<rect x="64" y="212.0" width="40.3" height="24" fill="#2F6FF0"/>
-<text class="bar-label" x="112.3" y="229.0">1.02 ms</text>
-<rect x="64" y="240.0" width="47.6" height="24" fill="#038585"/>
-<text class="bar-label" x="119.6" y="257.0">1.21 ms</text>
-<rect x="64" y="268.0" width="371.0" height="24" fill="#717C99"/>
-<text class="bar-label" x="443.0" y="285.0">9.44 ms</text>
+<rect x="64" y="212.0" width="239.3" height="24" fill="#2F6FF0"/>
+<text class="bar-label" x="311.3" y="229.0">6.09 ms</text>
+<rect x="64" y="240.0" width="330.1" height="24" fill="#038585"/>
+<text class="bar-label" x="402.1" y="257.0">8.40 ms</text>
+<rect x="64" y="268.0" width="335.6" height="24" fill="#717C99"/>
+<text class="bar-label" x="407.6" y="285.0">8.54 ms</text>
 <text class="cat-label" x="52" y="361.0" text-anchor="end">p99</text>
-<rect x="64" y="316.0" width="47.2" height="24" fill="#2F6FF0"/>
-<text class="bar-label" x="119.2" y="333.0">1.20 ms</text>
-<rect x="64" y="344.0" width="64.5" height="24" fill="#038585"/>
-<text class="bar-label" x="136.5" y="361.0">1.64 ms</text>
-<rect x="64" y="372.0" width="490.5" height="24" fill="#717C99"/>
-<text class="bar-label" x="562.5" y="389.0">12.48 ms</text>
+<rect x="64" y="316.0" width="328.5" height="24" fill="#2F6FF0"/>
+<text class="bar-label" x="400.5" y="333.0">8.36 ms</text>
+<rect x="64" y="344.0" width="446.1" height="24" fill="#038585"/>
+<text class="bar-label" x="518.1" y="361.0">11.35 ms</text>
+<rect x="64" y="372.0" width="440.6" height="24" fill="#717C99"/>
+<text class="bar-label" x="512.6" y="389.0">11.21 ms</text>
 <text class="cat-label" x="52" y="465.0" text-anchor="end">max</text>
-<rect x="64" y="420.0" width="70.6" height="24" fill="#2F6FF0"/>
-<text class="bar-label" x="142.6" y="437.0">1.80 ms</text>
-<rect x="64" y="448.0" width="93.9" height="24" fill="#038585"/>
-<text class="bar-label" x="165.9" y="465.0">2.39 ms</text>
-<rect x="64" y="476.0" width="701.1" height="24" fill="#717C99"/>
-<text class="bar-label" x="773.1" y="493.0">17.84 ms</text>
+<rect x="64" y="420.0" width="761.6" height="24" fill="#2F6FF0"/>
+<text class="bar-label" x="833.6" y="437.0">19.38 ms</text>
+<rect x="64" y="448.0" width="628.8" height="24" fill="#038585"/>
+<text class="bar-label" x="700.8" y="465.0">16.00 ms</text>
+<rect x="64" y="476.0" width="766.4" height="24" fill="#717C99"/>
+<text class="bar-label" x="838.4" y="493.0">19.50 ms</text>
 </svg>
     <table>
   <caption>Exact figures</caption>
   <thead><tr><th>percentile</th><th>cross-encode-rs</th><th>fastembed</th><th>sentence-transformers</th></tr></thead>
-  <tbody><tr><td>min</td><td>0.55 ms</td><td>0.46 ms</td><td>2.90 ms</td></tr><tr><td>p50</td><td>0.85 ms</td><td>0.92 ms</td><td>7.15 ms</td></tr><tr><td>p90</td><td>1.02 ms</td><td>1.21 ms</td><td>9.44 ms</td></tr><tr><td>p99</td><td>1.20 ms</td><td>1.64 ms</td><td>12.48 ms</td></tr><tr><td>max</td><td>1.80 ms</td><td>2.39 ms</td><td>17.84 ms</td></tr></tbody>
+  <tbody><tr><td>min</td><td>2.48 ms</td><td>3.15 ms</td><td>3.13 ms</td></tr><tr><td>p50</td><td>4.40 ms</td><td>6.34 ms</td><td>6.42 ms</td></tr><tr><td>p90</td><td>6.09 ms</td><td>8.40 ms</td><td>8.54 ms</td></tr><tr><td>p99</td><td>8.36 ms</td><td>11.35 ms</td><td>11.21 ms</td></tr><tr><td>max</td><td>19.38 ms</td><td>16.00 ms</td><td>19.50 ms</td></tr></tbody>
+</table>
+  </section>
+  <section class="chart">
+    <h2>Xenova/ms-marco-MiniLM-L-6-v2: Per-request latency (ms, lower is better)</h2>
+    
+    <div class="legend"><span><span class="swatch" style="background:#2F6FF0"></span>cross-encode-rs</span><span><span class="swatch" style="background:#038585"></span>fastembed</span><span><span class="swatch" style="background:#717C99"></span>sentence-transformers</span></div>
+<svg viewBox="-40 0 1000 588" role="img" aria-label="per-request latency, ms (lower is better) by percentile" font-family='ui-monospace, "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace'>
+<line class="gridline" x1="64.0" y1="4" x2="64.0" y2="512"/>
+<text class="tick-label" x="64.0" y="534" text-anchor="middle">0</text>
+<line class="gridline" x1="260.5" y1="4" x2="260.5" y2="512"/>
+<text class="tick-label" x="260.5" y="534" text-anchor="middle">20</text>
+<line class="gridline" x1="457.0" y1="4" x2="457.0" y2="512"/>
+<text class="tick-label" x="457.0" y="534" text-anchor="middle">40</text>
+<line class="gridline" x1="653.5" y1="4" x2="653.5" y2="512"/>
+<text class="tick-label" x="653.5" y="534" text-anchor="middle">60</text>
+<line class="gridline" x1="850.0" y1="4" x2="850.0" y2="512"/>
+<text class="tick-label" x="850.0" y="534" text-anchor="middle">80</text>
+<line class="axis" x1="64" y1="512" x2="850.0" y2="512"/>
+<text class="axis-title" x="457.0" y="572" text-anchor="middle">per-request latency, ms (lower is better)</text>
+<text class="axis-title" x="-22" y="252.0" text-anchor="middle" dominant-baseline="middle" transform="rotate(-90 -22 252.0)">percentile</text>
+<text class="cat-label" x="52" y="49.0" text-anchor="end">min</text>
+<rect x="64" y="4.0" width="163.4" height="24" fill="#2F6FF0"/>
+<text class="bar-label" x="235.4" y="21.0">16.63 ms</text>
+<rect x="64" y="32.0" width="135.5" height="24" fill="#038585"/>
+<text class="bar-label" x="207.5" y="49.0">13.79 ms</text>
+<rect x="64" y="60.0" width="134.7" height="24" fill="#717C99"/>
+<text class="bar-label" x="206.7" y="77.0">13.71 ms</text>
+<text class="cat-label" x="52" y="153.0" text-anchor="end">p50</text>
+<rect x="64" y="108.0" width="249.9" height="24" fill="#2F6FF0"/>
+<text class="bar-label" x="321.9" y="125.0">25.43 ms</text>
+<rect x="64" y="136.0" width="269.7" height="24" fill="#038585"/>
+<text class="bar-label" x="341.7" y="153.0">27.45 ms</text>
+<rect x="64" y="164.0" width="282.3" height="24" fill="#717C99"/>
+<text class="bar-label" x="354.3" y="181.0">28.73 ms</text>
+<text class="cat-label" x="52" y="257.0" text-anchor="end">p90</text>
+<rect x="64" y="212.0" width="299.4" height="24" fill="#2F6FF0"/>
+<text class="bar-label" x="371.4" y="229.0">30.47 ms</text>
+<rect x="64" y="240.0" width="355.3" height="24" fill="#038585"/>
+<text class="bar-label" x="427.3" y="257.0">36.16 ms</text>
+<rect x="64" y="268.0" width="368.7" height="24" fill="#717C99"/>
+<text class="bar-label" x="440.7" y="285.0">37.53 ms</text>
+<text class="cat-label" x="52" y="361.0" text-anchor="end">p99</text>
+<rect x="64" y="316.0" width="352.8" height="24" fill="#2F6FF0"/>
+<text class="bar-label" x="424.8" y="333.0">35.91 ms</text>
+<rect x="64" y="344.0" width="483.7" height="24" fill="#038585"/>
+<text class="bar-label" x="555.7" y="361.0">49.23 ms</text>
+<rect x="64" y="372.0" width="505.3" height="24" fill="#717C99"/>
+<text class="bar-label" x="577.3" y="389.0">51.43 ms</text>
+<text class="cat-label" x="52" y="465.0" text-anchor="end">max</text>
+<rect x="64" y="420.0" width="529.5" height="24" fill="#2F6FF0"/>
+<text class="bar-label" x="601.5" y="437.0">53.89 ms</text>
+<rect x="64" y="448.0" width="705.4" height="24" fill="#038585"/>
+<text class="bar-label" x="777.4" y="465.0">71.80 ms</text>
+<rect x="64" y="476.0" width="700.0" height="24" fill="#717C99"/>
+<text class="bar-label" x="772.0" y="493.0">71.25 ms</text>
+</svg>
+    <table>
+  <caption>Exact figures</caption>
+  <thead><tr><th>percentile</th><th>cross-encode-rs</th><th>fastembed</th><th>sentence-transformers</th></tr></thead>
+  <tbody><tr><td>min</td><td>16.63 ms</td><td>13.79 ms</td><td>13.71 ms</td></tr><tr><td>p50</td><td>25.43 ms</td><td>27.45 ms</td><td>28.73 ms</td></tr><tr><td>p90</td><td>30.47 ms</td><td>36.16 ms</td><td>37.53 ms</td></tr><tr><td>p99</td><td>35.91 ms</td><td>49.23 ms</td><td>51.43 ms</td></tr><tr><td>max</td><td>53.89 ms</td><td>71.80 ms</td><td>71.25 ms</td></tr></tbody>
+</table>
+  </section>
+  <section class="chart">
+    <h2>Xenova/ms-marco-MiniLM-L-6-v2: Per-document latency (ms, lower is better)</h2>
+    
+    <div class="legend"><span><span class="swatch" style="background:#2F6FF0"></span>cross-encode-rs</span><span><span class="swatch" style="background:#038585"></span>fastembed</span><span><span class="swatch" style="background:#717C99"></span>sentence-transformers</span></div>
+<svg viewBox="-40 0 1000 588" role="img" aria-label="per-document latency, ms (lower is better) by percentile" font-family='ui-monospace, "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace'>
+<line class="gridline" x1="64.0" y1="4" x2="64.0" y2="512"/>
+<text class="tick-label" x="64.0" y="534" text-anchor="middle">0</text>
+<line class="gridline" x1="221.2" y1="4" x2="221.2" y2="512"/>
+<text class="tick-label" x="221.2" y="534" text-anchor="middle">0.5</text>
+<line class="gridline" x1="378.4" y1="4" x2="378.4" y2="512"/>
+<text class="tick-label" x="378.4" y="534" text-anchor="middle">1</text>
+<line class="gridline" x1="535.6" y1="4" x2="535.6" y2="512"/>
+<text class="tick-label" x="535.6" y="534" text-anchor="middle">1.5</text>
+<line class="gridline" x1="692.8" y1="4" x2="692.8" y2="512"/>
+<text class="tick-label" x="692.8" y="534" text-anchor="middle">2</text>
+<line class="gridline" x1="850.0" y1="4" x2="850.0" y2="512"/>
+<text class="tick-label" x="850.0" y="534" text-anchor="middle">2.5</text>
+<line class="axis" x1="64" y1="512" x2="850.0" y2="512"/>
+<text class="axis-title" x="457.0" y="572" text-anchor="middle">per-document latency, ms (lower is better)</text>
+<text class="axis-title" x="-22" y="252.0" text-anchor="middle" dominant-baseline="middle" transform="rotate(-90 -22 252.0)">percentile</text>
+<text class="cat-label" x="52" y="49.0" text-anchor="end">min</text>
+<rect x="64" y="4.0" width="174.2" height="24" fill="#2F6FF0"/>
+<text class="bar-label" x="246.2" y="21.0">0.554 ms</text>
+<rect x="64" y="32.0" width="144.6" height="24" fill="#038585"/>
+<text class="bar-label" x="216.6" y="49.0">0.460 ms</text>
+<rect x="64" y="60.0" width="144.6" height="24" fill="#717C99"/>
+<text class="bar-label" x="216.6" y="77.0">0.460 ms</text>
+<text class="cat-label" x="52" y="153.0" text-anchor="end">p50</text>
+<rect x="64" y="108.0" width="267.7" height="24" fill="#2F6FF0"/>
+<text class="bar-label" x="339.7" y="125.0">0.852 ms</text>
+<rect x="64" y="136.0" width="289.2" height="24" fill="#038585"/>
+<text class="bar-label" x="361.2" y="153.0">0.920 ms</text>
+<rect x="64" y="164.0" width="301.8" height="24" fill="#717C99"/>
+<text class="bar-label" x="373.8" y="181.0">0.960 ms</text>
+<text class="cat-label" x="52" y="257.0" text-anchor="end">p90</text>
+<rect x="64" y="212.0" width="322.0" height="24" fill="#2F6FF0"/>
+<text class="bar-label" x="394.0" y="229.0">1.024 ms</text>
+<rect x="64" y="240.0" width="380.4" height="24" fill="#038585"/>
+<text class="bar-label" x="452.4" y="257.0">1.210 ms</text>
+<rect x="64" y="268.0" width="396.1" height="24" fill="#717C99"/>
+<text class="bar-label" x="468.1" y="285.0">1.260 ms</text>
+<text class="cat-label" x="52" y="361.0" text-anchor="end">p99</text>
+<rect x="64" y="316.0" width="377.7" height="24" fill="#2F6FF0"/>
+<text class="bar-label" x="449.7" y="333.0">1.201 ms</text>
+<rect x="64" y="344.0" width="515.6" height="24" fill="#038585"/>
+<text class="bar-label" x="587.6" y="361.0">1.640 ms</text>
+<rect x="64" y="372.0" width="540.8" height="24" fill="#717C99"/>
+<text class="bar-label" x="612.8" y="389.0">1.720 ms</text>
+<text class="cat-label" x="52" y="465.0" text-anchor="end">max</text>
+<rect x="64" y="420.0" width="564.8" height="24" fill="#2F6FF0"/>
+<text class="bar-label" x="636.8" y="437.0">1.796 ms</text>
+<rect x="64" y="448.0" width="751.4" height="24" fill="#038585"/>
+<text class="bar-label" x="823.4" y="465.0">2.390 ms</text>
+<rect x="64" y="476.0" width="745.1" height="24" fill="#717C99"/>
+<text class="bar-label" x="817.1" y="493.0">2.370 ms</text>
+</svg>
+    <table>
+  <caption>Exact figures</caption>
+  <thead><tr><th>percentile</th><th>cross-encode-rs</th><th>fastembed</th><th>sentence-transformers</th></tr></thead>
+  <tbody><tr><td>min</td><td>0.554 ms</td><td>0.460 ms</td><td>0.460 ms</td></tr><tr><td>p50</td><td>0.852 ms</td><td>0.920 ms</td><td>0.960 ms</td></tr><tr><td>p90</td><td>1.024 ms</td><td>1.210 ms</td><td>1.260 ms</td></tr><tr><td>p99</td><td>1.201 ms</td><td>1.640 ms</td><td>1.720 ms</td></tr><tr><td>max</td><td>1.796 ms</td><td>2.390 ms</td><td>2.370 ms</td></tr></tbody>
 </table>
   </section>
   <section class="chart">
