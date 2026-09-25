@@ -105,7 +105,7 @@ impl CrossEncoder {
         })
     }
 
-    fn init_model(&mut self) -> Result<(), CrossEncoderError> {
+    pub fn init_model(&mut self) -> Result<(), CrossEncoderError> {
         if self.model.is_some() {
             return Ok(());
         }
@@ -118,7 +118,7 @@ impl CrossEncoder {
         Ok(())
     }
 
-    fn init_tokenizer(&mut self) -> Result<(), CrossEncoderError> {
+    pub fn init_tokenizer(&mut self) -> Result<(), CrossEncoderError> {
         if self.tokenizer.is_some() {
             return Ok(());
         }

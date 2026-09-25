@@ -40,3 +40,6 @@ def main() -> None:
     print(f"  p90: {stats['p90']}")
     print(f"  p99: {stats['p99']}")
     print(f"  mean: {stats['mean']}")
+
+if __name__ == "__main__":
+    main()
