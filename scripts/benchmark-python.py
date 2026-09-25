@@ -136,7 +136,7 @@ def load_st_model(model_name: str) -> tuple["CrossEncoder", float]:
     from sentence_transformers import CrossEncoder
 
     start = time.monotonic()
-    model = CrossEncoder(model_name, num_labels=1, backend="onnx")
+    model = CrossEncoder(model_name, num_labels=1, backend="onnx", model_kwargs={"provider": "CPUExecutionProvider"})
     return (model, (time.monotonic() - start) * 1000)
 
 
