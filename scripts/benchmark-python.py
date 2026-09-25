@@ -163,6 +163,29 @@ def load_fastembed_model(model_name: str) -> tuple["TextCrossEncoder", float]:
     return (model, (time.monotonic() - start) * 1000)
 
 
+def time_fastembed_session(model_name: str) -> float:
+    """Times only the ONNX session creation, to match `init_model()` on the
+    Rust side. The constructor also resolves the model files and loads the
+    tokenizer, so it runs lazily and untimed, and the session is built through
+    the base class to skip `load_tokenizer`."""
+    from fastembed.common.onnx_model import OnnxModel
+    from fastembed.rerank.cross_encoder import TextCrossEncoder
+
+    inner = TextCrossEncoder(model_name=model_name, lazy_load=True).model
+    start = time.monotonic()
+    OnnxModel._load_onnx_model(
+        inner,
+        model_dir=inner._model_dir,
+        model_file=inner.model_description.model_file,
+        threads=inner.threads,
+        providers=inner.providers,
+        cuda=inner.cuda,
+        device_id=inner.device_id,
+        extra_session_options=inner._extra_session_options,
+    )
+    return (time.monotonic() - start) * 1000
+
+
 def benchmark_fastembed(
     entries: list[dict], model: "TextCrossEncoder"
 ) -> tuple[list[float], list[int]]:
@@ -184,8 +207,7 @@ def main() -> None:
             _, t = load_st_model(args.st_model)
             print(t)
         else:
-            _, t = load_fastembed_model(args.fastembed_model)
-            print(t)
+            print(time_fastembed_session(args.fastembed_model))
         return
 
     entries = load_entries(args.data)

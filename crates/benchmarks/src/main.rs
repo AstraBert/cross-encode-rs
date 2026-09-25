@@ -192,7 +192,7 @@ fn main() -> Result<(), BenchmarkError> {
     if load_only {
         let start = Instant::now();
         cross_encoder.init_model()?;
-        println!("{}", start.elapsed().as_millis());
+        println!("{}", start.elapsed().as_secs_f64() * 1000.0);
         return Ok(());
     }
 

@@ -8,6 +8,7 @@ to GitHub Pages:
   (plus pages/index.html linking both)
   crates/benchmarks/results/*/*.txt -> pages/blog/<model>-<metric>.html
                                        (one standalone chart per file, for screenshots)
+  crates/benchmarks/results/load-time-*.csv -> model load-time charts on both
 
 No JavaScript, no hover interactions: every bar carries its own numeric label,
 and a table with the exact figures sits under each chart. Stdlib only, run
@@ -422,6 +423,61 @@ def human_join(items: list[str]) -> str:
     return ", ".join(items[:-1]) + ", and " + items[-1]
 
 
+# load-time-<lib>-<model>.csv, one `load_time` column in ms, written by
+# scripts/model-load-time-bench.sh
+LOAD_TIME_LIBS = {"rs": "cross-encode-rs", "fastembed": "fastembed"}
+LOAD_TIME_STATS = ["mean", "p50", "p90", "p99"]
+
+
+def quantile_nearest(sorted_vals: list[float], q: float) -> float:
+    # same as polars' default ("nearest"), so figures match analyse-load-time.py
+    return sorted_vals[int(q * (len(sorted_vals) - 1) + 0.5)]
+
+
+def load_time_stats(path: Path) -> dict[str, float]:
+    vals = sorted(float(l) for l in path.read_text().split()[1:] if l.strip())
+    return {
+        "mean": sum(vals) / len(vals),
+        "p50": quantile_nearest(vals, 0.5),
+        "p90": quantile_nearest(vals, 0.9),
+        "p99": quantile_nearest(vals, 0.99),
+    }
+
+
+def load_time_charts(results_dir: Path) -> tuple[str, dict[str, str]]:
+    """Report sections + standalone blog files for the model load-time runs."""
+    per_model: dict[str, dict[str, dict[str, float]]] = {}
+    for path in sorted(results_dir.glob("load-time-*-*.csv")):
+        lib, model = path.stem.removeprefix("load-time-").split("-", 1)
+        if lib in LOAD_TIME_LIBS:
+            per_model.setdefault(model, {})[LOAD_TIME_LIBS[lib]] = load_time_stats(
+                path
+            )
+
+    body, blog_charts = "", {}
+    x_title = "model load time, ms (lower is better)"
+    for model, stats in per_model.items():
+        series_names = [s for s in LOAD_TIME_LIBS.values() if s in stats]
+        values = {s: [stats[s][k] for k in LOAD_TIME_STATS] for s in series_names}
+        fmt = lambda v: f"{v:.1f} ms"
+        model_label = BENCH_MODEL_LABELS.get(model, model)
+        title = "Model load time (ms, lower is better)"
+        body += chart_section(
+            f"{model_label}: {title}",
+            LOAD_TIME_STATS,
+            series_names,
+            values,
+            fmt,
+            "statistic",
+            x_title,
+        )
+        blog_charts[f"{model}-load-time.html"] = standalone_chart_page(
+            f"{model_label}: {title}",
+            chart_body(LOAD_TIME_STATS, series_names, values, fmt, x_title, "statistic"),
+        )
+    return body, blog_charts
+
+
 def render_benchmarks_page() -> None:
     results_dir = REPO_ROOT / "crates" / "benchmarks" / "results"
     # one subdirectory per model, e.g. results/xenova/*.txt, results/jina/*.txt
@@ -527,6 +583,10 @@ def render_benchmarks_page() -> None:
                 lt_groups, lt_series, lt_values, lt_fmt, lt_x_title, "model", lt_labels
             ),
         )
+
+    load_body, load_blog_charts = load_time_charts(results_dir)
+    body += load_body
+    blog_charts.update(load_blog_charts)
 
     library_desc = {
         "cross-encode-rs": "cross-encode-rs (Rust/ONNX)",
